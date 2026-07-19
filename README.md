@@ -1,45 +1,77 @@
-# rust-openspec-starter
+# Suunta
 
-An opinionated starter for Rust projects that use OpenSpec, ADRs, conventional
-commits, and AI-agent-friendly governance from day one.
+Suunta is a thin, sans-I/O **convergence-planning** core for Rust: given a desired
+`Bearing` and an observed `Fix`, it computes the residual `Course` — the
+`Correction`s needed to converge — while making no semantic judgment of its own.
 
-This repository is intentionally small. It provides the process skeleton for a
-new project, not product-specific architecture.
+```text
+Sounding  -> Fix ┐
+Domain    -> Bearing ┤ residual -> Course (Corrections, each with a stable Sigil)
+in-flight ─────────┘
+```
 
-## Use
+It is for the narrow space between "I keep reconciling desired state against
+observed state" and "I do not want a workflow engine to own my domain's meaning."
+Suunta owns one mechanism — the residual — and outsources every semantic judgment
+to the domain.
 
-1. Create a new repository from this starter.
-2. Replace placeholder project metadata in `PROJECT.md`, `README.md`, and
-   `Cargo.toml`.
-3. Install or expose the OpenSpec CLI in your shell.
-4. Generate local agent shims for your editor or agent:
+## Status (0.1.0)
 
-   ```bash
-   openspec init --tools codex
-   # or: openspec init --tools claude,cursor,github-copilot
-   ```
+This is the **initial project shape**, not a working planner yet. It ships the
+contract vocabulary, the architectural axioms, the executable governance, and a
+compiling crate skeleton. The residual-planning core is defined in `openspec/specs/`
+and implemented in later spec-driven changes — deliberately, because the design
+still has open questions (see `BACKLOG.md`).
 
-5. Start the first project-specific change with OpenSpec:
+## What Suunta owns, and what the domain supplies
 
-   ```bash
-   openspec new change "initial-project-shape"
-   ```
+Suunta owns a *mechanism* and no *meaning*. It computes *what* diverges between
+intent and reality; it never decides what two things *mean*, whether one is
+*relevant*, or whether an obligation is *settled*. Those are yours.
 
-   This change should replace placeholders, choose the real crate layout, add
-   the first specs, and make the Rust Definition of Done runnable.
+```text
+The domain supplies (meaning)                Suunta owns (mechanism, no meaning)
+  Sigil     a stable semantic identity         the residual computation
+  coverage  which in-flight work is relevant    (Bearing vs Fix ∪ relevant in-flight)
+  predicate when an obligation is settled       the Course / Correction vocabulary
+                                                reversibility marking (One-Way)
+```
 
-## Included
+The core decides which `Correction`s close the drift; it does not decide their
+meaning, their durability, their gating, or their compensation — those are downstream
+consumer concerns.
 
-- `AGENTS.md` - repository rules for AI coding agents and humans.
-- `PROJECT.md` - project-specific contract, terminology, and priorities.
-- `docs/development-flow.md` - short OpenSpec and commit checklist.
-- `docs/adr/` - architecture decision record skeleton.
-- `openspec/` - empty OpenSpec structure ready for specs and changes.
-- A Rust workspace policy anchor in `Cargo.toml`. It intentionally has no
-  crates until the first project-specific change chooses the real layout.
+## Why sans-I/O and no semantic judgment
 
-Generated agent shims such as `.codex/` and `.claude/` are per-clone local
-files and should not be committed.
+A pure core that reads no clock and performs no I/O cannot make a semantic judgment
+either — so it outsources all three (identity, relevance, settlement) to the domain.
+This is the **semantic bill of purity**: its cost is that an undetected domain
+semantic error fails silently, accepted deliberately rather than patched by pulling
+judgment back into the core. See `PROJECT.md` and `BACKLOG.md`.
+
+## Domain Language
+
+Suunta uses navigation terms as architecture, not branding — `Sounding`, `Fix`,
+`Bearing`, `Course`, `Correction`, `Sigil`, `Drift`. See
+[`docs/domain-language.md`](docs/domain-language.md).
+
+## Architecture
+
+- `PROJECT.md` — vision, positioning, non-goals.
+- `openspec/specs/` — shipped requirements.
+- `BACKLOG.md` — deferred decisions and open design questions.
+- `AGENTS.md` — operating protocol and the Definition of Done.
+
+## Contributing
+
+This project uses OpenSpec and Tianheng-native governance. Start a change with:
+
+```bash
+openspec new change "your-change-name"
+```
+
+Run the full Definition of Done (see `AGENTS.md`) before committing, and read
+`AGENTS.md` before making repository changes.
 
 ## License
 
