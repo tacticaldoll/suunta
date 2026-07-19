@@ -106,6 +106,49 @@ so this discipline strengthens least-commitment rather than weakening it. Review
 any proposal that reintroduces consumer-driven deferral. Like the no-semantic-judgment
 axiom, this is a judgment-level, review-governed rule — not a Tianheng tooth.
 
+A third disposition sits alongside noun and verb: **manifestation** — making an
+*already-decided-true* property of Suunta explicit or machine-guarded (for example,
+enforcing that the facade re-exports exactly its intended surface). Manifestation adds no
+obligation the consumer must satisfy and changes no contract, so it needs no consumer to
+justify it and does not over-commit. The rider: manifestation is only free for what is
+*already* decided true — manifesting an open question would smuggle a decision, which is
+over-commitment in disguise.
+
+## Governance and Conformance
+
+Suunta separates the *judgment* from the *check on its projection*.
+
+- **Governance is judgment, and lives in prose** — `openspec/specs/` and this file,
+  `PROJECT.md`, `BACKLOG.md`. Intent and meaning are decided here, and stay
+  review-governed.
+- **Code is the projection of a judgment onto the structural plane** — a `pub use` set,
+  an absent `async fn`, a dependency edge, a missing trait bound.
+- **Conformance verifies the projection still matches the judgment.** It is a family:
+  Tianheng (structure, dependencies, source scans), `rustc` (type facts — e.g.
+  `Correction<Body>` carries no bound), and tests (`Residual::is_converged`, the
+  composition proof). They bite the projection, never the judgment itself.
+
+This explains the honest limits: "the core makes no semantic judgment" stays prose
+because it *casts no structural shadow*; the sans-I/O scan is partial because the shadow
+is *lossy* (macro-expanded I/O is invisible) — a green gate is "no visible violation",
+not proof.
+
+Before turning a judgment into a Tianheng tooth, it must pass four gates — casting a
+shadow is necessary, not sufficient:
+
+1. **Shadow** — does the judgment project into a syntactically decidable structural fact?
+   (No → it stays prose + review, like no-semantic-judgment.)
+2. **Faithful** — is that fact a faithful proxy, not a gameable one? (LOC is not
+   thinness; a proxy invites Goodhart.)
+3. **Stable** — is the judgment stable? A tooth on a moving projection is a recurring
+   maintenance tax and a second copy of the truth; prefer a test.
+4. **Sync** — is the extra `prose ⟷ tooth` coupling worth it? The tooth is itself a
+   *second projection* of the judgment, and nothing mechanically checks it matches the
+   prose — only review does. The regress terminates in a human.
+
+Fail any gate and the honest home is prose, review, or a test — never a faked tooth. A
+tooth complements review; it never replaces it.
+
 ## OpenSpec Workflow
 
 This repository uses OpenSpec. The lifecycle is:

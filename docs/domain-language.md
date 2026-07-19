@@ -25,7 +25,9 @@ Domain          -> Bearing    (desired targets)       ┘   -> Course (residual 
 - **Bearing** — the desired target state, supplied by the domain. What *should be*.
 - **Drift** — the `Bearing` targets a `Fix` does not certify satisfied. `Correction`s
   close it; the residual `Course` retains those not already covered by a relevant
-  in-flight `Correction`.
+  in-flight `Correction`. Drift is a *concept*, deliberately not a type: the residual
+  `Course` already embodies it, so naming a `Drift` type would be redundant ceremony
+  against thinness (see `BACKLOG.md`).
 - **Course** — the residual plan: the `Bearing` targets the `Fix` has not certified
   satisfied and coverage has not certified covered. The core filters the `Bearing` by
   the domain's verdicts; it does not itself diff reality.
