@@ -267,6 +267,26 @@ pub struct Residual<Body> {
     pub surfaced: Vec<SurfacedFinding>,
 }
 
+impl<Body> Residual<Body> {
+    /// Whether this cycle is fully converged: the `Course` is empty **and** no findings
+    /// are surfaced.
+    ///
+    /// This is a pure, policy-free structural read — it inspects only whether the two
+    /// collections are empty, never a `Body`, and compares no meaning. It reports *full*
+    /// convergence: nothing left to plan and nothing flagged for disposition. A consumer
+    /// that checked only for an empty `Course` would declare success while an undisposed
+    /// surfaced finding (a superseded or conflicting in-flight `Correction`) still awaits
+    /// the domain's attention; requiring `surfaced` to be empty too closes that gap.
+    ///
+    /// Deciding what to do when this is `false` — whether a surfaced finding is blocking or
+    /// merely pending, whether to keep correcting or treat a target as terminal — is a
+    /// disposition, which is the domain's judgment, not a read the core provides.
+    #[must_use]
+    pub fn is_converged(&self) -> bool {
+        self.course.corrections().is_empty() && self.surfaced.is_empty()
+    }
+}
+
 /// Compute the residual for one convergence cycle.
 ///
 /// The residual is the `Bearing`'s targets minus those a domain finding positively
@@ -533,5 +553,54 @@ mod tests {
         let residual = plan_residual(bearing, &satisfaction, &[]);
         // A contradiction is not unambiguous certification, so the target is retained.
         assert_eq!(residual.course.corrections().len(), 1);
+    }
+
+    #[test]
+    fn is_converged_when_course_and_surfaced_are_both_empty() {
+        // Every target satisfied, nothing surfaced -> fully converged.
+        let bearing = Bearing::new(vec![corr("a", 1)]);
+        let residual = plan_residual(bearing, &[sat("a", Satisfaction::Satisfied)], &[]);
+        assert!(residual.course.corrections().is_empty());
+        assert!(residual.surfaced.is_empty());
+        assert!(residual.is_converged());
+    }
+
+    #[test]
+    fn empty_course_with_a_surfaced_finding_is_not_converged() {
+        // No targets remain, but a conflicting in-flight correction is surfaced and
+        // undisposed: not convergence. This is the silent-failure is_converged guards.
+        let bearing: Bearing<u8> = Bearing::new(vec![]);
+        let coverage = vec![CoverageFinding {
+            inflight: InFlightIndex(0),
+            effect: CoverageEffect::Conflicts,
+        }];
+        let residual = plan_residual(bearing, &[], &coverage);
+        assert!(residual.course.corrections().is_empty());
+        assert!(!residual.surfaced.is_empty());
+        assert!(!residual.is_converged());
+    }
+
+    #[test]
+    fn non_empty_course_is_not_converged() {
+        // A retained target means work remains, regardless of surfaced findings.
+        let bearing = Bearing::new(vec![corr("a", 1)]);
+        let residual = plan_residual(bearing, &[sat("a", Satisfaction::Unsatisfied)], &[]);
+        assert!(!residual.course.corrections().is_empty());
+        assert!(!residual.is_converged());
+    }
+
+    #[test]
+    fn is_converged_needs_no_capability_from_body() {
+        // An opaque Body with no trait beyond what `Correction::new` requires (none):
+        // `is_converged` still works, so it reads only collection emptiness, never the payload.
+        #[derive(Debug, Clone)]
+        struct OpaqueBody;
+        let bearing = Bearing::new(vec![Correction::new(
+            Sigil::new("a"),
+            Reversibility::Reversible,
+            OpaqueBody,
+        )]);
+        let residual = plan_residual(bearing, &[sat("a", Satisfaction::Satisfied)], &[]);
+        assert!(residual.is_converged());
     }
 }

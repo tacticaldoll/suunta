@@ -173,3 +173,28 @@ isolated and reusable.
 - **WHEN** `suunta-contract`'s manifest is read
 - **THEN** it declares no dependency on another workspace crate
 
+### Requirement: The Residual Mechanically Reports Full Convergence
+The planner output SHALL expose a pure, policy-free read reporting whether a cycle is
+fully converged, defined as: the residual `Course` is empty **and** no findings are
+surfaced. This read SHALL inspect no `Body`, compare no meaning, and hold no state — it
+reports only the structural shape of the residual. The core SHALL NOT expose a richer
+settlement classification (such as a pending/blocked/converged verdict), because deciding
+whether a surfaced finding is blocking or merely pending is a disposition, which is a
+domain judgment, not a mechanical read.
+
+#### Scenario: Empty course with no surfaced findings is converged
+- **WHEN** the residual `Course` is empty and no findings are surfaced
+- **THEN** the convergence read is true
+
+#### Scenario: An undisposed surfaced finding is not convergence
+- **WHEN** the residual `Course` is empty but a finding is surfaced (for example a superseded or conflicting in-flight correction)
+- **THEN** the convergence read is false, so a consumer cannot declare success while a finding awaits disposition
+
+#### Scenario: A non-empty course is not convergence
+- **WHEN** the residual `Course` retains one or more corrections
+- **THEN** the convergence read is false regardless of the surfaced findings
+
+#### Scenario: The read makes no semantic judgment
+- **WHEN** the convergence read is computed
+- **THEN** it reads only whether the course and surfaced collections are empty, inspecting no `Body` and comparing no meaning
+
