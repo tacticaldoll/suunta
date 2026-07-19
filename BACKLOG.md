@@ -135,11 +135,30 @@ user. Consumption may freeze provisionally; production waits for the consumer.
 - **The unenforceable purity invariant.** "The core makes no semantic judgment" is
   not statically expressible — semantic comparison has no syntactic marker, so
   Tianheng cannot bite it the way it bites no-I/O or no-async. It stays review- and
-  structure-governed. Whether to add **structural contradiction detection** (e.g.
-  same `Sigil` with a drifted fingerprint, or same fingerprint with split `Sigil`s)
-  to turn a silent domain error into an observable alarm — and whether that detection
-  belongs in this core at all or in a downstream consumer that reconciles content
-  identity — is open. Leaning: keep the core pure; detection is a downstream concern.
+  structure-governed.
+  **Resolved (detection):** the core performs **no** structural contradiction detection.
+  Comparing a `Sigil` against a content fingerprint to spot a drifted or split identity is
+  itself a comparison the pure core does not make; it belongs to a downstream
+  identity-reconciliation consumer, never here.
+  **Open, deferred (carrying):** whether the core *carries* a domain-supplied content
+  `Fingerprint` so a downstream detector can make that comparison. Determined shape, if
+  landed:
+  - Identity has two faces — `Sigil` (stable across meaning-preserving change) and a
+    content `Fingerprint` (the current content's identity); both domain-supplied.
+  - It is an **opaque value** on the `Correction`, a peer of `Sigil` — **not a trait or a
+    `Body` bound.** A trait/bound would make the core call a method on the payload,
+    breaching "the core exposes no operation that reads a `Body`"; a value never touches
+    it. The core carries it and does **not even compare it** (comparison is the downstream
+    detector's), so it is *more* opaque than `Sigil`, which the core at least compares by
+    value for the residual filter.
+  - Obligation form follows what the core does with it: a *carried* value is a field with
+    its law stated in the spec **when landed**; only a behaviour the core *calls* would be
+    a trait — and the core calls none here.
+  - **Least-commitment:** landing waits for the first real consumer that reconciles content
+    identity to force the shape; recorded now only as a determined candidate. Framed
+    generally (any identity-reconciliation consumer); if it cannot stand as a general
+    identity contract, the fingerprint rides inside the opaque `Body` and the core carries
+    nothing new.
 - **Async variant.** Deferred until a real driver forces it; the sans-I/O core is
   agnostic to sync/async at the edge.
 - **The driver/core seam — the shape is resolved, realization deferred.** Explored
