@@ -104,7 +104,10 @@ user. Consumption may freeze provisionally; production waits for the consumer.
 - **Async variant.** Deferred until a real driver forces it; the sans-I/O core is
   agnostic to sync/async at the edge.
 
-## Recorded Reconsiderations (inherited discipline)
+## Recorded Reconsiderations
+
+Inherited discipline first, then this project's own resolved design decisions.
+
 
 - **No architecture-decision-record files.** Decision provenance lives in git commit
   bodies and pull requests; reconsiderations live here; the living docs are the
