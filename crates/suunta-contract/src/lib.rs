@@ -5,24 +5,25 @@
 //!
 //! # Axioms
 //!
-//! 1. **No semantic judgment in the core.** Semantic identity ([`Sigil`]), relevance
-//!    (a domain coverage verdict), and settlement predicates are domain-supplied. The
-//!    core computes the residual and records; it never compares meanings. This is the
-//!    *semantic bill of purity*: its cost (a silent failure on a domain semantic
-//!    error) is accepted deliberately rather than patched by pulling judgment into
-//!    the core.
+//! 1. **No semantic judgment in the core.** Semantic identity ([`Sigil`]), target
+//!    satisfaction, relevance (a domain coverage verdict), and settlement predicates
+//!    are domain-supplied. The core computes the residual and records; it never
+//!    compares meanings — in particular it never decides whether an observed `Fix`
+//!    meets a desired `Bearing`. This is the *semantic bill of purity* (four faces of
+//!    one purity choice): its cost (a silent failure on a domain semantic error) is
+//!    accepted deliberately rather than patched by pulling judgment into the core.
 //! 2. **Sans-I/O purity.** The core exposes no `async fn`, reads no ambient clock,
 //!    and performs no I/O. A runtime drives it and injects time at the edge.
 //! 3. **No dependency on other workspace crates.**
 //!
 //! # Status
 //!
-//! The emit-side vocabulary — the types the core produces — is landed: [`Correction`]
-//! and [`Course`], alongside [`Sigil`] and [`Reversibility`]. The residual *computation*
-//! and the observe-side vocabulary (`Fix`, `Bearing`, `Sounding`, `Drift`) are defined
-//! in `openspec/specs/` and built in later spec-driven changes (see `BACKLOG.md`).
-//! Durability, gating, execution, and compensation of a correction are downstream
-//! consumer concerns, not this core.
+//! The residual planner is landed: [`Correction`], [`Course`], [`Sigil`],
+//! [`Reversibility`], and [`plan_residual`], which computes the residual [`Course`]
+//! from a `Bearing` and domain-supplied satisfaction and coverage findings. Still
+//! deferred (see `BACKLOG.md`): the settlement predicate, the production-side coverage
+//! contract, and an async edge. Durability, gating, execution, and compensation of a
+//! correction are downstream consumer concerns, not this core.
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
@@ -119,8 +120,8 @@ impl<Body> Correction<Body> {
 /// A `Course` is the residual *as a value* — the collection the core emits. It preserves
 /// the order it is built from and never deduplicates or reorders its `Correction`s, since
 /// collapsing two of them would require judging that they *mean* the same, which is not
-/// the core's to decide. The computation that *forms* a `Course` as a residual is defined
-/// in `openspec/specs/` and realized in a later change; this type is only the carrier.
+/// the core's to decide. The computation that *forms* a `Course` as a residual is
+/// performed by [`plan_residual`]; this type is only the carrier.
 #[derive(Debug, Clone)]
 pub struct Course<Body> {
     corrections: Vec<Correction<Body>>,
