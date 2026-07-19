@@ -21,12 +21,16 @@ _0.1.0 is being prepared; it has not yet been published to crates.io._
   `InFlightIndex`, `SurfacedFinding`, and `Residual`.
 - **`Residual::is_converged`**: a pure, policy-free structural read reporting full
   convergence (the `Course` is empty and no findings are surfaced).
-- **Composition example** (`examples/converge.rs`): a convergence-loop consumer that drives
-  the planner end-to-end over the public API, demonstrating the fulfilled and
-  domain-disposition halt paths.
+- **Curated facade** (`suunta`): the recommended single entrypoint — a pure re-export of
+  the compose-level surface, carrying no logic of its own. Its crate-root doctest drives a
+  converging loop end-to-end through the public API; `crates/suunta/tests/convergence_loop.rs`
+  drives the four-trajectory (converge / `Unknown` / never-satisfies / conflicting in-flight)
+  demonstration. This retires the former `suunta-contract` `examples/converge.rs`: the
+  composition proof now lives on the facade, off the core crate.
 - **Executable governance** (`suunta-governance`): dependency-isolation, sans-I/O purity
-  (no I/O, no ambient clock, no exposed `async fn`), workspace coverage, and active-prose
-  boundaries, each with a firing test.
+  (no I/O, no ambient clock, no exposed `async fn`), a facade dependency boundary and a
+  re-exports-only source tooth, workspace coverage, and active-prose boundaries, each with a
+  firing test.
 
 ### Design
 

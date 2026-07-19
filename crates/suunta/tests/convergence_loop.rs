@@ -1,25 +1,26 @@
-//! Composition smoke: a minimal convergence-loop consumer.
+//! Composition proof: a convergence-loop consumer driven through the `suunta` facade.
 //!
-//! This example is the first real consumer of the planning contract. It drives a full
-//! convergence loop over the shipped [`plan_residual`] using **only** the public API, and
-//! it exists to force two questions the core deliberately leaves open (see the crate's
-//! `BACKLOG.md`, "Settlement — three layers, three homes"):
+//! This is the first real consumer of the planning contract. It drives full
+//! convergence loops over the shipped `plan_residual` using **only** the `suunta`
+//! facade's public API — never `suunta-contract` directly — so it doubles as proof
+//! that the facade re-exports every type a consumer needs. It forces the two
+//! questions the core deliberately leaves open (see the contract crate's `BACKLOG.md`,
+//! "Settlement — three layers, three homes"):
 //!
-//! - **Layer 1 (mechanical read):** the loop halts a fully-converged cycle with
-//!   [`Residual::is_converged`] — a pure structural read the core provides.
-//! - **Layer 2 (disposition):** every retry-vs-terminal and conflict-handling decision is
-//!   made *here, in the consumer's loop body*. The core provides no settlement trait; the
+//! - **Layer 1 (mechanical read):** a fully-converged cycle halts on
+//!   `Residual::is_converged` — a pure structural read the core provides.
+//! - **Layer 2 (disposition):** every retry-vs-terminal and conflict-handling decision
+//!   is made *here, in the consumer*. The core provides no settlement trait; the
 //!   `Disposition` vocabulary below is the domain's, not the contract's.
 //!
-//! Layer 3 (cross-cycle termination) also lives here, in the consumer: the loop carries its
-//! own cycle bound and progress check. None of it leaks into `suunta-contract`.
+//! Layer 3 (cross-cycle termination) also lives here: the loop carries its own cycle
+//! bound and progress check. None of it leaks into the core.
 //!
 //! To have teeth, the stub domain drives four trajectories in one run: a target that
 //! converges, a target stuck `Unknown`, a target that never satisfies, and an in-flight
-//! correction marked `Conflicts`. The run self-checks its end state and panics (non-zero
-//! exit) if composition or the expected outcome breaks.
+//! correction marked `Conflicts`.
 
-use suunta_contract::{
+use suunta::{
     Bearing, Correction, CoverageEffect, CoverageFinding, InFlightIndex, Reversibility,
     Satisfaction, SatisfactionFinding, Sigil, SurfacedFinding,
 };
@@ -43,9 +44,6 @@ enum Disposition {
     /// An in-flight correction conflicts with the plan; the domain holds it for resolution.
     Held,
 }
-
-// --- the stub domain: it only *produces* findings and *judges* disposition; it invents no
-// core behavior ---
 
 const CONVERGE: &str = "goal:converge";
 const STUCK_UNKNOWN: &str = "goal:stuck-unknown";
@@ -116,17 +114,10 @@ fn coverage() -> Vec<CoverageFinding> {
     }]
 }
 
-fn main() {
-    // Two consumers over the same seam, one per halt path.
-    scenario_fulfilled_halt();
-    scenario_disposition_halt();
-    println!("composition smoke OK: seam composes and both halt paths hold");
-}
-
 /// A clean consumer: every target satisfies and nothing is surfaced, so the loop halts on
-/// [`suunta_contract::Residual::is_converged`] — the fulfilled path, where the Layer 1 read
-/// is load-bearing (it is the reason the loop stops).
-fn scenario_fulfilled_halt() {
+/// `Residual::is_converged` — the fulfilled path, where the Layer 1 read is load-bearing.
+#[test]
+fn clean_domain_halts_via_is_converged() {
     let bearing = || {
         Bearing::new(vec![
             Correction::new(
@@ -163,10 +154,9 @@ fn scenario_fulfilled_halt() {
 
     let mut fulfilled = false;
     for cycle in 0..MAX_CYCLES {
-        let residual = suunta_contract::plan_residual(bearing(), &observe_clean(cycle), &[]);
+        let residual = suunta::plan_residual(bearing(), &observe_clean(cycle), &[]);
         if residual.is_converged() {
             fulfilled = true;
-            println!("clean domain: fulfilled at cycle {cycle} via is_converged");
             break;
         }
     }
@@ -179,16 +169,15 @@ fn scenario_fulfilled_halt() {
 /// The four-trajectory consumer: a converging target, one stuck `Unknown`, one permanently
 /// `Unsatisfied`, and a conflicting in-flight correction. This domain can never fully
 /// converge, so it halts by domain disposition (Layer 2), not by `is_converged`.
-fn scenario_disposition_halt() {
+#[test]
+fn four_trajectories_halt_by_disposition() {
     let mut cycles_run = 0usize;
     let mut fulfilled = false;
     let mut dispositions: Vec<(String, Disposition)> = Vec::new();
 
     for cycle in 0..MAX_CYCLES {
         cycles_run += 1;
-        let satisfaction = observe(cycle);
-        let coverage = coverage();
-        let residual = plan_and_report(cycle, satisfaction, coverage);
+        let residual = suunta::plan_residual(bearing(), &observe(cycle), &coverage());
 
         // Layer 1: the one mechanical read the core provides.
         if residual.is_converged() {
@@ -220,11 +209,7 @@ fn scenario_disposition_halt() {
                 STUCK_UNKNOWN => Disposition::Abandoned,
                 other => panic!("unexpected retained target: {other}"),
             };
-            println!(
-                "  disposing {} ({}): {disp:?}",
-                retained.sigil().as_str(),
-                action.what
-            );
+            let _ = action.what;
             dispositions.push((retained.sigil().as_str().to_owned(), disp));
         }
         for finding in &residual.surfaced {
@@ -239,37 +224,6 @@ fn scenario_disposition_halt() {
             }
         }
         break;
-    }
-
-    report_and_check(cycles_run, fulfilled, &dispositions);
-}
-
-/// Plan one cycle and print what the core surfaced. Returns the residual.
-fn plan_and_report(
-    cycle: usize,
-    satisfaction: Vec<SatisfactionFinding>,
-    coverage: Vec<CoverageFinding>,
-) -> suunta_contract::Residual<Action> {
-    let residual = suunta_contract::plan_residual(bearing(), &satisfaction, &coverage);
-    let retained: Vec<&str> = residual
-        .course
-        .corrections()
-        .iter()
-        .map(|c| c.sigil().as_str())
-        .collect();
-    println!(
-        "cycle {cycle}: retained={retained:?} surfaced={} converged={}",
-        residual.surfaced.len(),
-        residual.is_converged()
-    );
-    residual
-}
-
-/// Assert the expected end state; panic (non-zero exit) if composition or outcome broke.
-fn report_and_check(cycles_run: usize, fulfilled: bool, dispositions: &[(String, Disposition)]) {
-    println!("--- outcome after {cycles_run} cycle(s) ---");
-    for (who, disp) in dispositions {
-        println!("  {who}: {disp:?}");
     }
 
     // The retry path was exercised: the converging goal took more than one cycle.
@@ -306,6 +260,4 @@ fn report_and_check(cycles_run: usize, fulfilled: bool, dispositions: &[(String,
         Some(&Disposition::Converged),
         "the converging goal should have converged and left the residual"
     );
-
-    println!("disposition-halt domain OK: all four trajectories resolved");
 }

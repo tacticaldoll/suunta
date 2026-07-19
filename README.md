@@ -26,6 +26,11 @@ a `Bearing` and domain-supplied satisfaction and coverage findings, alongside th
 and the executable governance. What is still deferred — the settlement predicate, the
 production-side coverage contract, and an async edge — is recorded in `BACKLOG.md`.
 
+Depend on the curated **facade** (`suunta`) — the recommended single entrypoint that
+re-exports the compose-level surface and carries a runnable convergence-loop doctest.
+The isolated core (`suunta-contract`) stays available for direct use, but `suunta` is
+the crate to depend on.
+
 ## What Suunta owns, and what the domain supplies
 
 Suunta owns a *mechanism* and no *meaning*. It filters the `Bearing` to *what
