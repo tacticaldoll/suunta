@@ -133,8 +133,8 @@ user. Consumption may freeze provisionally; production waits for the consumer.
   structure-governed. Whether to add **structural contradiction detection** (e.g.
   same `Sigil` with a drifted fingerprint, or same fingerprint with split `Sigil`s)
   to turn a silent domain error into an observable alarm — and whether that detection
-  belongs in this core at all or in a downstream idempotency-adjudication consumer —
-  is open. Leaning: keep the core pure; detection is a downstream concern.
+  belongs in this core at all or in a downstream consumer that reconciles content
+  identity — is open. Leaning: keep the core pure; detection is a downstream concern.
 - **Async variant.** Deferred until a real driver forces it; the sans-I/O core is
   agnostic to sync/async at the edge.
 
