@@ -1,7 +1,7 @@
 # quality-governance Specification
 
 ## Purpose
-Define Suunta's executable governance: the Tianheng constitution's dependency boundaries and sans-I/O teeth, workspace coverage, active-prose presence, the honest limit that "no semantic judgment" is not statically enforceable, and the single-sourced Definition of Done.
+Define Suunta's executable governance: the Tianheng constitution's dependency boundaries and sans-I/O teeth, the facade's re-export purity, workspace coverage, active-prose presence, the honest limit that "no semantic judgment" is not statically enforceable, and the single-sourced Definition of Done.
 ## Requirements
 ### Requirement: Executable Constitution
 Suunta SHALL enforce its architecture with an executable Tianheng constitution
@@ -19,10 +19,15 @@ it judges.
 
 ### Requirement: Dependency Boundaries Are Enforced
 The constitution SHALL restrict each crate's dependencies: `suunta-contract` to no
-workspace or framework crate, and `suunta-governance` to `tianheng` and `guibiao`.
+workspace or framework crate, `suunta-governance` to `tianheng` and `guibiao`, and
+the `suunta` facade to `suunta-contract` alone.
 
 #### Scenario: An unapproved core dependency fails the gate
 - **WHEN** `suunta-contract` gains a dependency outside its allowed set
+- **THEN** the constitution reports a dependency-boundary violation
+
+#### Scenario: An unapproved facade dependency fails the gate
+- **WHEN** the `suunta` facade gains a dependency other than `suunta-contract`
 - **THEN** the constitution reports a dependency-boundary violation
 
 ### Requirement: Sans-I/O Purity Is Enforced
@@ -34,6 +39,28 @@ no `std::io`/`fs`/`net`/`process`, read no ambient clock, and expose no `async f
 #### Scenario: An exposed async fn in the core fails the gate
 - **WHEN** `suunta-contract` exposes an `async fn`
 - **THEN** the async-exposure boundary reports a violation
+
+### Requirement: The Facade Is A Pure Re-Export Surface
+The constitution SHALL enforce that the `suunta` facade library holds only
+re-exports, crate attributes, and documentation, so the curated entrypoint cannot
+accrete logic. The check SHALL scan the facade source tree and SHALL NOT pass
+vacuously: a facade source tree that is missing or unreadable SHALL fail the gate
+rather than scan zero files and pass. Because `suunta-governance` may depend only on
+governance-family tooling, the scan SHALL be a brace-depth line heuristic rather
+than a full parser; the Definition of Done's `cargo fmt --all --check` backstops the
+one gap where a logic item is co-located on a re-export line.
+
+#### Scenario: A logic item in the facade fails the gate
+- **WHEN** the facade library defines an item other than a re-export at brace-depth zero
+- **THEN** the re-exports-only scan reports a violation naming the file and line
+
+#### Scenario: A missing facade source tree fails loudly
+- **WHEN** the re-exports-only scan finds no facade source files
+- **THEN** it fails the gate rather than passing on an empty scan
+
+#### Scenario: A clean facade passes
+- **WHEN** the facade library contains only re-exports, attributes, and comments
+- **THEN** the re-exports-only scan reports no violation
 
 ### Requirement: Workspace Coverage
 Every workspace crate SHALL be covered by a dependency boundary, so no crate is
@@ -71,25 +98,4 @@ divergent subset.
 #### Scenario: The Definition of Done is stated once
 - **WHEN** the Definition of Done is documented
 - **THEN** `AGENTS.md` holds the complete gate list and other docs point to it
-
-### Requirement: Composition Is Demonstrated Executably
-The workspace SHALL carry an executable example that drives a full convergence loop over
-the public API of the planning contract, so composability is an enforced, non-regressing
-property rather than a claim. The example SHALL consume only the public API, hold any loop
-state in the consumer rather than the core, and exercise four trajectories — a target that
-converges, a target left uncertain (`Unknown`), a target that never satisfies, and an
-in-flight correction marked conflicting — so its demonstration is earned rather than a
-happy-path stub. It SHALL run clean under the Definition of Done.
-
-#### Scenario: The example composes end-to-end via the public API
-- **WHEN** the example is run
-- **THEN** it drives repeated planning through the public API to a bounded halt without reaching into crate internals
-
-#### Scenario: The four trajectories are exercised
-- **WHEN** the example runs its stub domain
-- **THEN** it drives a converging target, an `Unknown`-retained target, a permanently unsatisfied target, and a conflicting in-flight correction within one run
-
-#### Scenario: A broken composition fails the gate
-- **WHEN** the example fails to compose or to reach its expected outcome
-- **THEN** running it under the Definition of Done fails rather than passing silently
 
