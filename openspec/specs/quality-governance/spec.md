@@ -1,5 +1,8 @@
-## ADDED Requirements
+# quality-governance Specification
 
+## Purpose
+TBD - created by archiving change establish-suunta-shape. Update Purpose after archive.
+## Requirements
 ### Requirement: Executable Constitution
 Suunta SHALL enforce its architecture with an executable Tianheng constitution
 (`suunta-governance`), so the boundaries prose claims are gated, not merely asserted.
@@ -68,3 +71,4 @@ divergent subset.
 #### Scenario: The Definition of Done is stated once
 - **WHEN** the Definition of Done is documented
 - **THEN** `AGENTS.md` holds the complete gate list and other docs point to it
+

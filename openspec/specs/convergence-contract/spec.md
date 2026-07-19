@@ -1,5 +1,8 @@
-## ADDED Requirements
+# convergence-contract Specification
 
+## Purpose
+TBD - created by archiving change establish-suunta-shape. Update Purpose after archive.
+## Requirements
 ### Requirement: Navigation Vocabulary
 Suunta SHALL name the convergence-planning roles with a fixed navigation register:
 `Sounding` (one observation cycle), `Fix` (the observed current state), `Bearing`
@@ -23,6 +26,22 @@ design rather than describing a shipped algorithm.
 #### Scenario: Relevance is a domain-supplied verdict
 - **WHEN** a `Course` is formed from a `Bearing`, a `Fix`, and in-flight `Correction`s
 - **THEN** which in-flight `Correction`s count as relevant is taken from a domain-supplied coverage verdict, never from the core comparing meanings
+
+### Requirement: A Course Is An Ordered Value Of Corrections
+A `Course` SHALL be a public, sans-I/O value type (`Course<Body>`) that holds an
+**ordered** collection of `Correction`s and preserves the order supplied by its
+producer. The core SHALL NOT deduplicate, reorder, or otherwise reinterpret the
+collection, since doing so would be a semantic act the core does not perform. This
+requirement defines the `Course` *value*; the requirement that a `Course` is *computed*
+as a residual (see "A Course Is A Residual") is realized by a later change.
+
+#### Scenario: Order is preserved
+- **WHEN** a `Course` is formed from a sequence of `Correction`s
+- **THEN** iterating the `Course` yields those `Correction`s in the order supplied
+
+#### Scenario: The core does not deduplicate
+- **WHEN** a `Course` is formed from two `Correction`s carrying equal `Sigil`s
+- **THEN** the `Course` retains both; the core collapses nothing, because equality of meaning is not the core's to decide
 
 ### Requirement: The Core Makes No Semantic Judgment
 The planning core SHALL make no semantic judgment. Semantic identity, relevance, and
@@ -54,6 +73,23 @@ Each `Correction` SHALL carry a domain-supplied `Sigil` that is stable across
 - **WHEN** the core handles a `Correction`
 - **THEN** it treats the `Sigil` as an opaque identity, compared by value, never by meaning
 
+### Requirement: A Correction Carries An Opaque Domain Payload
+A `Correction` SHALL be a public, sans-I/O value type in `suunta-contract` that carries
+its domain change payload as a type parameter (`Correction<Body>`) with **no
+core-imposed trait bound on `Body`**, alongside the `Sigil` and `Reversibility` it
+already carries. Because the core declares no bound on `Body`, it SHALL expose no
+operation that reads or compares the payload's meaning: payload opacity is a property
+the type system guarantees, not one the core merely promises. The core owns the
+carrier; the domain owns the meaning.
+
+#### Scenario: The core carries the payload without a bound
+- **WHEN** `suunta-contract`'s public API is compiled
+- **THEN** `Correction` is generic over a `Body` with no core-declared trait bound, and the core exposes no method that inspects or compares a `Body` value
+
+#### Scenario: A Correction still carries identity and reversibility
+- **WHEN** a `Correction` is constructed
+- **THEN** it carries a domain-supplied `Sigil` and a `Reversibility` marking, and the core treats the `Sigil` by value equality and the `Body` opaquely
+
 ### Requirement: One-Way Corrections Are Marked
 A `Correction` SHALL declare its reversibility, and a One-Way `Correction` SHALL be
 marked as such. The core SHALL NOT own rollback or compensation; undoing a One-Way
@@ -78,3 +114,4 @@ isolated and reusable.
 #### Scenario: The core is isolated
 - **WHEN** `suunta-contract`'s manifest is read
 - **THEN** it declares no dependency on another workspace crate
+
