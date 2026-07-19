@@ -197,22 +197,24 @@ user. Consumption may freeze provisionally; production waits for the consumer.
     vocabulary of exchange), the consumer owns the **verbs** (judgment, execution,
     driving); Suunta's governance teeth point **inward** (they constrain its own
     purity), never **outward** at the consumer's design — the inverse of Tower.
-  - *One open sub-decision (undecided), in three grades.* All are naming-only — no new
-    capability, no cross-cycle state, no judgment — and fall inside the consumption
-    envelope this file already permits to freeze provisionally. `Sounding` and `Fix`
-    are defined in `docs/domain-language.md` but unbuilt (a vocabulary/code gap
-    **vocabulary-as-governance** argues to close):
+  - *One naming sub-decision — resolved: B1b shipped in 0.1.0.* It was naming-only — no
+    new capability, no cross-cycle state, no judgment — inside the consumption envelope
+    this file permits to freeze provisionally. `Sounding` and `Fix`, once defined in
+    `docs/domain-language.md` but unbuilt, are now realized types
+    (`crates/suunta-contract/src/lib.rs`). The three grades weighed at the time:
     - **B1a — name `Fix` only.** Wrap the per-target satisfaction verdicts as a `Fix`;
       keep `plan_residual(bearing, &fix, &coverage)`. Strongest fit, least churn.
-    - **B1b — name `Fix` + collect a body-free `Sounding {fix, coverage}`.**
-      `plan_residual(bearing, &sounding)`. Fuller vocabulary realization, and welds the
-      verdicts-not-reality axiom into a type (the purity bonus above). Cost: accept
-      "`Sounding` = one cycle's certified readings" as its meaning.
+    - **B1b — name `Fix` + collect a body-free `Sounding {fix, coverage}`** *(shipped)*.
+      `plan_residual(bearing, &sounding)`. Fuller vocabulary realization; it names the
+      readings and makes body-freeness a spec-governed invariant rather than an
+      accident of the loose slices. Cost accepted: "`Sounding` = one cycle's certified
+      readings" as its meaning.
     - **B1c — `Sounding {bearing, fix, coverage}`.** *Rejected*: conflates the
       reference with the reading.
-    Leaning **B1b** for the type-backed axiom; **B1a** is the clean fallback. Against
-    both stands **least-commitment**: keep the current three-argument signature until a
-    real driver shows the naming earns its keep.
+    B1b won over the B1a fallback and over the least-commitment hold (keep the loose
+    signature until a real driver forces it) because **vocabulary-as-governance** argued
+    to close the defined-but-unbuilt gap now, while the naming stayed inside the
+    already-permitted consumption envelope.
 
 ## Recorded Reconsiderations
 
@@ -228,13 +230,14 @@ Inherited discipline first, then this project's own resolved design decisions.
   recreates `openspec/changes/archive/` — remove it after each sync.
 - **Definition of Done is single-sourced in `AGENTS.md`.** `README.md` and
   `docs/development-flow.md` point to it rather than restating a divergent subset.
-- **State model — resolved: functional per cycle.** `plan_residual(bearing,
-  satisfaction, coverage)` is a pure function of one cycle's inputs and holds no
-  cross-`Sounding` state. It consumes domain-certified coverage findings *about*
-  in-flight `Correction`s, not the raw in-flight set — so there is no `inflight`
-  parameter (an earlier leaning had `plan_residual(bearing, fix, inflight, findings)`;
-  the shipped shape replaced `fix` with satisfaction findings and dropped raw
-  `inflight`). Settled by the residual-planner landing, not left open.
+- **State model — resolved: functional per cycle.** `plan_residual(bearing, &sounding)`
+  is a pure function of one cycle's inputs and holds no cross-`Sounding` state. It
+  consumes domain-certified satisfaction and coverage findings *about* the `Bearing`'s
+  targets and in-flight `Correction`s, not raw reality or the raw in-flight set — so
+  there is no `inflight` parameter (an earlier leaning had `plan_residual(bearing, fix,
+  inflight, findings)`; the shipped shape bundles the per-cycle `Fix` and coverage
+  findings into a body-free `Sounding` and drops raw `inflight`). Settled by the
+  residual-planner landing, not left open.
 
 ## Explicitly Deferred
 
