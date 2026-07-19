@@ -139,6 +139,57 @@ user. Consumption may freeze provisionally; production waits for the consumer.
   identity — is open. Leaning: keep the core pure; detection is a downstream concern.
 - **Async variant.** Deferred until a real driver forces it; the sans-I/O core is
   agnostic to sync/async at the edge.
+- **The driver/core seam — the shape is resolved, realization deferred.** Explored
+  (see git history) by tracing what actually crosses the core boundary each cycle in
+  the facade's convergence-loop test. When you try to draw a "driver contract", it
+  collapses into two disjoint halves:
+  - *Already owned, and purely nouns.* The `Bearing` (desired targets, carrying the
+    domain payloads) is the persistent *reference* the domain sounds against. One
+    cycle's readings are a `Sounding` — the `Fix` (per-target satisfaction verdicts)
+    plus the coverage verdicts — fed with the `Bearing` to `plan_residual`, which
+    returns a `Residual` (the `Course` plus surfaced findings) carrying the Layer-1
+    `is_converged` read. The seam is `plan_residual(&Bearing, &Sounding) -> Residual`:
+    two input nouns, one output noun, one pure function. The core owns 100% of this,
+    statelessly and functional-per-cycle; there is no third thing waiting to be named.
+    (An earlier sketch wrongly put the `Bearing` *inside* the `Sounding`. Per
+    `docs/domain-language.md` a `Sounding` is what one cycle reads and certifies
+    *against* the `Bearing`, so the `Bearing` is the reference, never part of the
+    reading.)
+  - *A purity bonus falls out.* A `Sounding` (Fix + coverage) references targets and
+    in-flight only by `Sigil`/index plus verdict — it carries **no `Body`**. The domain
+    payload therefore threads `Bearing<Body> -> Course<Body>` and is never visible to
+    the readings, so "the core consumes verdicts, not reality" becomes a property the
+    type system can back, not only prose.
+  - *Must never become a contract.* The loop, single-cycle disposition (Layer 2, the
+    domain's), and cross-cycle termination (Layer 3, the driver's — needs
+    cross-`Sounding` state the core refuses) have no data the core can own. Giving any
+    of them a *trait the user implements* rebuilds a Tower-style `Service` — a
+    framework dictating the consumer's shape — which is the identity Suunta is defined
+    against. The seam stays **values the driver supplies to a pure function**, never a
+    behaviour it must implement.
+  - *Why the collapse is the answer.* The core already owns the whole honest seam and
+    the driver is correctly empty, which is precisely why Layer 3 and the async variant
+    wait for a *real* driver rather than a speculative contract. Positioning (candidate
+    for `PROJECT.md`, not yet captured there): the framework owns the **nouns** (the
+    vocabulary of exchange), the consumer owns the **verbs** (judgment, execution,
+    driving); Suunta's governance teeth point **inward** (they constrain its own
+    purity), never **outward** at the consumer's design — the inverse of Tower.
+  - *One open sub-decision (undecided), in three grades.* All are naming-only — no new
+    capability, no cross-cycle state, no judgment — and fall inside the consumption
+    envelope this file already permits to freeze provisionally. `Sounding` and `Fix`
+    are defined in `docs/domain-language.md` but unbuilt (a vocabulary/code gap
+    **vocabulary-as-governance** argues to close):
+    - **B1a — name `Fix` only.** Wrap the per-target satisfaction verdicts as a `Fix`;
+      keep `plan_residual(bearing, &fix, &coverage)`. Strongest fit, least churn.
+    - **B1b — name `Fix` + collect a body-free `Sounding {fix, coverage}`.**
+      `plan_residual(bearing, &sounding)`. Fuller vocabulary realization, and welds the
+      verdicts-not-reality axiom into a type (the purity bonus above). Cost: accept
+      "`Sounding` = one cycle's certified readings" as its meaning.
+    - **B1c — `Sounding {bearing, fix, coverage}`.** *Rejected*: conflates the
+      reference with the reading.
+    Leaning **B1b** for the type-backed axiom; **B1a** is the clean fallback. Against
+    both stands **least-commitment**: keep the current three-argument signature until a
+    real driver shows the naming earns its keep.
 
 ## Recorded Reconsiderations
 
