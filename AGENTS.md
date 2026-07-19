@@ -22,11 +22,13 @@ Before proposing or writing code, protect these axioms:
 1. **Planning core stays thin**: `suunta-contract` owns the residual computation
    and the `Course`/`Correction` vocabulary. It does not own execution, durability,
    scheduling, gating, or compensation.
-2. **No semantic judgment in the core**: semantic identity (`Sigil`), relevance (a
+2. **No semantic judgment in the core**: semantic identity (`Sigil`), target
+   satisfaction (the `Fix` — whether reality meets a `Bearing` target), relevance (a
    coverage verdict), and settlement predicates are domain-supplied. The core
    computes the residual and records; it never compares meanings. This is the
-   *semantic bill of purity* — its cost (silent failure on domain semantic error)
-   is accepted deliberately, not patched by pulling judgment into the core.
+   *semantic bill of purity* (four faces) — its cost (silent failure on domain
+   semantic error) is accepted deliberately, not patched by pulling judgment into the
+   core.
 3. **Sans-I/O purity**: the core exposes no `async fn`, reads no ambient clock, and
    performs no I/O. A runtime drives it and injects time at the edge.
 4. **Vocabulary is governance**: names such as `Sounding`, `Fix`, `Bearing`,

@@ -22,9 +22,9 @@
 //!
 //! The residual planner is landed: [`Correction`], [`Course`], [`Sigil`],
 //! [`Reversibility`], and [`plan_residual`], which computes the residual [`Course`]
-//! from a `Bearing` and domain-supplied satisfaction and coverage findings. Still
-//! deferred (see `BACKLOG.md`): the settlement predicate, the production-side coverage
-//! contract, and an async edge. Durability, gating, execution, and compensation of a
+//! from a `Bearing` and a per-cycle [`Sounding`] (the [`Fix`] and coverage findings).
+//! Still deferred (see `BACKLOG.md`): the settlement predicate, the production-side
+//! coverage contract, and an async edge. Durability, gating, execution, and compensation of a
 //! correction are downstream consumer concerns, not this core.
 
 #![forbid(unsafe_code)]
