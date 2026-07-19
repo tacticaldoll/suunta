@@ -7,8 +7,9 @@ architecture truth.
 ## Suunta In One Sentence
 
 Suunta is a thin, sans-I/O convergence-planning core: given a desired `Bearing`
-and an observed `Fix`, it computes the residual `Course` (the `Correction`s needed
-to converge) while making no semantic judgment of its own.
+and the domain's certified satisfaction of each target (the `Fix`), it computes the
+residual `Course` (the `Correction`s that remain) by filtering the `Bearing` to what
+the domain has not certified done, while making no semantic judgment of its own.
 
 This repository is intentionally narrow. Suunta is not a workflow engine, a
 scheduler, or a durable-execution runtime. Durability, gating, and compensation are
