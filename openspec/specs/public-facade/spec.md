@@ -8,15 +8,15 @@ Define the curated `suunta` facade as the workspace's single compose-level publi
 Suunta SHALL provide a single facade crate `suunta` that is the curated public
 entrypoint to the compose-level convergence-planning API. The facade SHALL
 re-export the public items a downstream consumer needs to run a convergence loop —
-build a `Bearing` of `Correction`s, supply the domain's `SatisfactionFinding`s and
-`CoverageFinding`s, call `plan_residual`, and read the resulting `Residual` —
-drawing them from `suunta-contract`. Because all of `suunta-contract`'s public API
-is compose-level (there is no advanced kernel to withhold), the facade SHALL
-re-export it in full. The facade SHALL depend only on `suunta-contract`.
+build a `Bearing` of `Correction`s, assemble the domain's `SatisfactionFinding`s into a
+`Fix` and, with its `CoverageFinding`s, into a `Sounding`, call `plan_residual`, and read
+the resulting `Residual` — drawing them from `suunta-contract`. Because all of
+`suunta-contract`'s public API is compose-level (there is no advanced kernel to withhold),
+the facade SHALL re-export it in full. The facade SHALL depend only on `suunta-contract`.
 
 #### Scenario: Facade re-exports the compose-level surface
 - **WHEN** a downstream consumer depends only on `suunta`
-- **THEN** it can name `Bearing`, `Correction`, `Course`, `Sigil`, `Reversibility`, `Satisfaction`, `SatisfactionFinding`, `CoverageEffect`, `CoverageFinding`, `InFlightIndex`, `SurfacedFinding`, and `Residual`, and call `plan_residual`, without depending on `suunta-contract` directly
+- **THEN** it can name `Bearing`, `Correction`, `Course`, `Sigil`, `Reversibility`, `Satisfaction`, `SatisfactionFinding`, `Fix`, `CoverageEffect`, `CoverageFinding`, `InFlightIndex`, `Sounding`, `SurfacedFinding`, and `Residual`, and call `plan_residual`, without depending on `suunta-contract` directly
 
 #### Scenario: Facade depends only on the core
 - **WHEN** `cargo run -p suunta-governance -- check --manifest-path Cargo.toml` runs

@@ -5,8 +5,9 @@
 //!
 //! - the navigation vocabulary — [`Bearing`], [`Correction`], [`Course`],
 //!   [`Sigil`], [`Reversibility`];
-//! - the domain's verdicts — [`Satisfaction`], [`SatisfactionFinding`],
+//! - the domain's verdicts — [`Satisfaction`], [`SatisfactionFinding`], [`Fix`],
 //!   [`CoverageEffect`], [`CoverageFinding`], [`InFlightIndex`];
+//! - one cycle's readings — [`Sounding`];
 //! - the residual output — [`Residual`], [`SurfacedFinding`] — and the planner
 //!   [`plan_residual`].
 //!
@@ -31,7 +32,10 @@
 //! `cargo test` to see it execute):
 //!
 //! ```
-//! use suunta::{Bearing, Correction, Reversibility, Satisfaction, SatisfactionFinding, Sigil};
+//! use suunta::{
+//!     Bearing, Correction, Fix, Reversibility, Satisfaction, SatisfactionFinding, Sigil,
+//!     Sounding,
+//! };
 //!
 //! // The desired end state: one reversible correction toward a goal. Rebuilt each
 //! // cycle because `plan_residual` consumes the `Bearing`.
@@ -57,7 +61,9 @@
 //!
 //! let mut converged_at = None;
 //! for cycle in 0..4 {
-//!     let residual = suunta::plan_residual(bearing(), &observe(cycle), &[]);
+//!     // One cycle's readings: this Fix, no coverage. A Sounding carries no payload.
+//!     let sounding = Sounding::new(Fix::new(observe(cycle)), vec![]);
+//!     let residual = suunta::plan_residual(bearing(), &sounding);
 //!     if cycle == 0 {
 //!         // Not yet satisfied: the target is retained in the residual Course.
 //!         assert_eq!(residual.course.corrections().len(), 1);
@@ -76,6 +82,7 @@
 #![warn(missing_docs)]
 
 pub use suunta_contract::{
-    Bearing, Correction, Course, CoverageEffect, CoverageFinding, InFlightIndex, Residual,
-    Reversibility, Satisfaction, SatisfactionFinding, Sigil, SurfacedFinding, plan_residual,
+    Bearing, Correction, Course, CoverageEffect, CoverageFinding, Fix, InFlightIndex, Residual,
+    Reversibility, Satisfaction, SatisfactionFinding, Sigil, Sounding, SurfacedFinding,
+    plan_residual,
 };
