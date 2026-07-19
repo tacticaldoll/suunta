@@ -273,6 +273,37 @@ tokio = { path = "../tokio" }
     }
 
     #[test]
+    fn core_ambient_clock_call_is_rejected() {
+        // Prove the ambient-clock tooth bites (the `.ending_with(["now"])` matcher), a
+        // distinct mechanism from the plain no-I/O paths. In this single-crate fixture no
+        // other boundary can fire, so any violation is this tooth.
+        let workspace = TempWorkspace::new("suunta-governance-core-clock-leak");
+        workspace.write_package_with_source(
+            "suunta-contract",
+            "",
+            "pub fn leak() -> std::time::SystemTime {\n    std::time::SystemTime::now()\n}\n",
+        );
+        workspace.write_package("suunta-governance", "");
+        workspace.write_root_manifest_members(&["suunta-contract", "suunta-governance"]);
+
+        let outcome = check(
+            constitution().static_boundaries(),
+            &workspace.path.join("Cargo.toml"),
+        );
+
+        let Outcome::Violations(report) = outcome else {
+            panic!("expected an ambient-clock violation, got {outcome:?}");
+        };
+        assert!(
+            report.violations.iter().any(|violation| {
+                let id = violation.id();
+                id.target == "std::time" && id.rule == "inline symbol path confined to module"
+            }),
+            "expected the core ambient-clock boundary to fire: {report:?}"
+        );
+    }
+
+    #[test]
     fn current_active_prose_satisfies_governance() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
 
@@ -332,6 +363,27 @@ tokio = { path = "../tokio" }
                 id.target == "crate" && id.rule == "must not expose async fn"
             }),
             "expected the core async-exposure boundary to fire: {report:?}"
+        );
+    }
+
+    #[test]
+    fn core_async_in_submodule_is_rejected() {
+        // Prove `.including_submodules()` actually recurses: an async fn nested in a
+        // submodule must fire too, not just one at the crate root.
+        let outcome = semantic_reaction_outcome(
+            "suunta-governance-core-async-submodule-leak",
+            "pub mod inner {\n    pub async fn leak() {}\n}\n",
+        );
+
+        let Outcome::Violations(report) = outcome else {
+            panic!("expected a submodule async-exposure violation, got {outcome:?}");
+        };
+        assert!(
+            report.violations.iter().any(|violation| {
+                let id = violation.id();
+                id.rule == "must not expose async fn"
+            }),
+            "expected the async-exposure boundary to fire inside a submodule: {report:?}"
         );
     }
 
