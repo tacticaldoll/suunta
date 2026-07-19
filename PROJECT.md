@@ -38,11 +38,14 @@ The behavior that must be protected first:
   `Course`/`Correction` vocabulary. It does not own execution, durability,
   scheduling, gating, or compensation.
 - **No semantic judgment in the core — the semantic bill of purity**: a sans-I/O
-  pure core cannot decide semantic identity, relevance, or whether an obligation is
-  settled. These three judgments are domain-supplied; the core only computes the
-  residual and records. An undetected domain semantic error is therefore a silent
-  failure — the deliberate cost of purity — with structural and idempotency defenses
-  left to downstream consumers (see `BACKLOG.md`).
+  pure core cannot decide semantic identity, whether a target is satisfied, relevance,
+  or whether an obligation is settled. These four judgments are domain-supplied; the
+  core only computes the residual and records. (Satisfaction — whether an observed
+  `Fix` meets a desired `Bearing` target — is the fourth face, surfaced when the
+  residual computation was built: comparing observed against desired is a meaning
+  comparison the pure core cannot make.) An undetected domain semantic error is
+  therefore a silent failure — the deliberate cost of purity — with structural and
+  idempotency defenses left to downstream consumers (see `BACKLOG.md`).
 - **Sans-I/O purity**: the core exposes no `async fn`, reads no ambient clock, and
   performs no I/O. A runtime drives it and injects time at the edge.
 - **Governance with teeth**: Tianheng and project specs enforce the boundaries prose
