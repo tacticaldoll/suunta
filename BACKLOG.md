@@ -50,13 +50,37 @@ boundary or the coverage gate fails.
 
 These are recorded so the repo can drive its own development; none is decided here.
 Discipline: keep judgment domain-supplied; the core only computes or evaluates,
-never compares meanings. Do not freeze a user-obligation trait ahead of its first
-real consumer.
+never compares meanings. Do not freeze a user-**implemented** judgment-**production**
+trait ahead of its first real consumer — but the planner MAY provisionally expose the
+minimum **consumption** envelope residual mechanics require (the planning effects the
+core acts on, the structural laws findings obey, calibration fixtures), because that
+envelope is produced by the domain and consumed by the core, not implemented by the
+user. Consumption may freeze provisionally; production waits for the consumer.
 
-- **Coverage-verdict shape.** How the domain supplies relevance — likely a
-  classification (`Equivalent` / `Superseded` / `Conflicting` / `Independent`) — and
-  who cancels a `Superseded` One-Way in-flight `Correction`. Classification logic is
-  domain-supplied; the core consumes the verdict. Not yet designed.
+- **Coverage-verdict shape.** How the domain supplies relevance. **Clarified boundary:**
+  split the *consumption* contract (freezable now — mechanism-determined) from the
+  *production* contract (waits for the first consumer).
+  - *Consumption (provisionally freezable):* the core consumes domain-produced findings
+    as opaque values and acts on a fixed set of **planning effects** it must mechanically
+    distinguish — (a) an in-flight `Correction` already covers the residual → suppress a
+    duplicate; (b) the current plan supersedes an in-flight one → surface a supersession
+    finding; (c) an in-flight one cannot safely coexist → surface a conflict, never
+    silently plan; (d) the domain positively certifies two are mutually ignorable →
+    exclude from coverage. A finding references a specific in-flight **instance** (not a
+    `Sigil`, since a `Course` does not dedup); **any in-flight instance with no finding is
+    `unknown` — retained, never treated as ignorable.** `Independent`/ignorable is a
+    positively-certified verdict, never derived from absence (the seam's false-negative
+    bound). The class *names/taxonomy* — whether exactly four, supersession
+    directionality, pairwise vs. aggregate — are NOT frozen.
+  - *Production (waits for the consumer):* how the domain computes, keys, indexes,
+    batches, or caches findings; any `may_overlap`/candidate mechanism; any
+    user-implemented judgment trait. Never frozen ahead of a real consumer.
+  - **Who cancels a `Superseded` One-Way?** No one in the core. Supersession is a
+    *cycle-scoped relation* (a function of this `Bearing`/`Fix`/context), surfaced as a
+    finding on the planning output — never a mutable lifecycle status on `Correction`.
+    The core does not name execution-lifecycle states (`Claim` etc. are downstream/sibling
+    vocabulary), does not cancel, and does not erase realized effects; pre/post-execution
+    disposition is consumer policy.
 - **Settlement-predicate shape.** Likely a small closed enum (e.g. `Fulfilled` /
   `Breached` / `Terminal`), declared by the domain and only evaluated by the core or
   a downstream evaluator — must not become a DSL. Not yet designed; co-design it with
@@ -71,7 +95,11 @@ real consumer.
   is open. Leaning: keep the core pure; detection is a downstream concern.
 - **State model.** Whether the residual core is purely functional per cycle or must
   track in-flight `Correction`s across soundings, and if the latter, where that state
-  lives without pulling I/O into the core.
+  lives without pulling I/O into the core. **Leaning:** functional-per-cycle — a
+  `plan_residual(bearing, fix, inflight, findings)` shape takes the in-flight set as a
+  caller-supplied input each cycle (state injected at the edge, like time), so the core
+  holds no cross-sounding state. To be settled by the residual-mechanism change that
+  lands that signature, not decided here.
 - **Async variant.** Deferred until a real driver forces it; the sans-I/O core is
   agnostic to sync/async at the edge.
 
