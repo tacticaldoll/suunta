@@ -124,14 +124,15 @@ user. Consumption may freeze provisionally; production waits for the consumer.
     same trigger as the async variant below. The composition example holds its own loop
     bound and progress check in the consumer, never in the core, which is exactly where
     Layer 3 lives today.
-  - **How it was settled.** A minimal convergence-loop consumer
-    (`crates/suunta-contract/examples/converge.rs`) forced Layers 1 and 2 by driving four
-    trajectories in one run — a target that converges, one stuck `Unknown`, one
-    permanently `Unsatisfied`, and an in-flight `Conflicts`. Building it confirmed
-    `is_converged` is the whole of Layer 1 and that disposition is domain loop-body
-    policy (Layer 2). A self-authored example is a strawman guarded by the adversarial
-    review at propose and apply; the example self-asserts each trajectory's outcome so a
-    regression fails the gate rather than passing quietly.
+  - **How it was settled.** A minimal convergence-loop consumer — now the facade
+    integration test (`crates/suunta/tests/convergence_loop.rs`), ported from the retired
+    `suunta-contract` example — forced Layers 1 and 2 by driving four trajectories in one
+    run — a target that converges, one stuck `Unknown`, one permanently `Unsatisfied`, and
+    an in-flight `Conflicts`. Building it confirmed `is_converged` is the whole of Layer 1
+    and that disposition is domain loop-body policy (Layer 2). A self-authored consumer
+    test is a strawman guarded by the adversarial review at propose and apply; it
+    self-asserts each trajectory's outcome so a regression fails the gate rather than
+    passing quietly.
 - **The unenforceable purity invariant.** "The core makes no semantic judgment" is
   not statically expressible — semantic comparison has no syntactic marker, so
   Tianheng cannot bite it the way it bites no-I/O or no-async. It stays review- and
