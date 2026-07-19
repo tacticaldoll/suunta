@@ -204,6 +204,33 @@ pub struct SatisfactionFinding {
     pub satisfaction: Satisfaction,
 }
 
+/// The `Fix`: one sounding's certified satisfaction of the `Bearing`'s targets — the
+/// aggregate of per-target [`SatisfactionFinding`]s.
+///
+/// A reading taken *against intent*, which only the domain can take (comparing reality
+/// to a desired target is a meaning comparison the core cannot make); the core consumes
+/// it and never computes it. A `Fix` is **body-free** — it references targets only by
+/// [`Sigil`] and carries no domain payload. Construct via [`Fix::new`]; read via
+/// [`Fix::findings`].
+#[derive(Debug, Clone)]
+pub struct Fix {
+    findings: Vec<SatisfactionFinding>,
+}
+
+impl Fix {
+    /// Assemble a fix from one cycle's per-target satisfaction findings.
+    #[must_use]
+    pub fn new(findings: Vec<SatisfactionFinding>) -> Self {
+        Self { findings }
+    }
+
+    /// The per-target satisfaction findings, in the order supplied.
+    #[must_use]
+    pub fn findings(&self) -> &[SatisfactionFinding] {
+        &self.findings
+    }
+}
+
 /// A reference to a specific in-flight `Correction` instance, by position in the caller's
 /// in-flight slice.
 ///
@@ -241,6 +268,41 @@ pub struct CoverageFinding {
     pub inflight: InFlightIndex,
     /// The instance's relation to the current plan.
     pub effect: CoverageEffect,
+}
+
+/// A `Sounding`: one convergence cycle's certified readings — the [`Fix`] and the
+/// coverage findings the domain took this cycle.
+///
+/// It carries **no** domain `Body`: it is a non-generic type that references targets and
+/// in-flight `Correction`s only by [`Sigil`]/[`InFlightIndex`] and verdict, so the core
+/// cannot read a payload from the readings. The `Bearing` is the reference a sounding is
+/// taken *against*, so it is not part of the `Sounding`; the domain payload flows only
+/// from `Bearing<Body>` into [`Course<Body>`](Course). Construct via [`Sounding::new`];
+/// read via [`Sounding::fix`] and [`Sounding::coverage`].
+#[derive(Debug, Clone)]
+pub struct Sounding {
+    fix: Fix,
+    coverage: Vec<CoverageFinding>,
+}
+
+impl Sounding {
+    /// Assemble one cycle's readings from its `Fix` and its coverage findings.
+    #[must_use]
+    pub fn new(fix: Fix, coverage: Vec<CoverageFinding>) -> Self {
+        Self { fix, coverage }
+    }
+
+    /// This cycle's certified satisfaction of the `Bearing`'s targets.
+    #[must_use]
+    pub fn fix(&self) -> &Fix {
+        &self.fix
+    }
+
+    /// This cycle's coverage findings about in-flight `Correction`s.
+    #[must_use]
+    pub fn coverage(&self) -> &[CoverageFinding] {
+        &self.coverage
+    }
 }
 
 /// A finding the core surfaces on its output without disposing of it.
@@ -299,18 +361,18 @@ impl<Body> Residual<Body> {
 /// corrections a coverage finding marks superseded or conflicting; the core disposes of
 /// nothing.
 ///
-/// The core consumes only domain-certified findings — `Fix` as [`SatisfactionFinding`]s and
-/// relevant in-flight as [`CoverageFinding`]s — never raw observations or raw in-flight
-/// corrections, which is why there is no in-flight parameter. The function is pure and
-/// functional-per-cycle: it reads only its arguments, holds no state across `Sounding`s,
-/// reads no clock, and performs no I/O. It compares `Sigil`s by value only and never
-/// inspects a `Body`.
+/// The cycle's readings arrive as a [`Sounding`] — the [`Fix`] (per-target
+/// [`SatisfactionFinding`]s) and the relevant in-flight as [`CoverageFinding`]s — never
+/// raw observations or raw in-flight corrections, which is why there is no in-flight
+/// parameter. The `Bearing` stays a separate argument: it is the reference the `Sounding`
+/// is taken against. The function is pure and functional-per-cycle: it reads only its
+/// arguments, holds no state across `Sounding`s, reads no clock, and performs no I/O. It
+/// compares `Sigil`s by value only and never inspects a `Body` (the `Sounding` has none).
 #[must_use]
-pub fn plan_residual<Body>(
-    bearing: Bearing<Body>,
-    satisfaction: &[SatisfactionFinding],
-    coverage: &[CoverageFinding],
-) -> Residual<Body> {
+pub fn plan_residual<Body>(bearing: Bearing<Body>, sounding: &Sounding) -> Residual<Body> {
+    let satisfaction = sounding.fix().findings();
+    let coverage = sounding.coverage();
+
     let has_verdict = |sig: &Sigil, want: Satisfaction| {
         satisfaction
             .iter()
@@ -441,6 +503,10 @@ mod tests {
         }
     }
 
+    fn sounding(fix: Vec<SatisfactionFinding>, coverage: Vec<CoverageFinding>) -> Sounding {
+        Sounding::new(Fix::new(fix), coverage)
+    }
+
     fn retained_sigils(residual: &Residual<u8>) -> Vec<&str> {
         residual
             .course
@@ -458,7 +524,7 @@ mod tests {
             inflight: InFlightIndex(0),
             effect: CoverageEffect::Covers(Sigil::new("b")),
         }];
-        let residual = plan_residual(bearing, &satisfaction, &coverage);
+        let residual = plan_residual(bearing, &sounding(satisfaction, coverage));
         // a satisfied, b covered, c neither -> only c remains.
         assert_eq!(retained_sigils(&residual), ["c"]);
     }
@@ -474,7 +540,7 @@ mod tests {
             sat("unknown", Satisfaction::Unknown),
             sat("unsat", Satisfaction::Unsatisfied),
         ];
-        let residual = plan_residual(bearing, &satisfaction, &[]);
+        let residual = plan_residual(bearing, &sounding(satisfaction, vec![]));
         // Only positive certification omits; absence and uncertainty never do.
         assert_eq!(residual.course.corrections().len(), 3);
     }
@@ -490,7 +556,7 @@ mod tests {
             sat("unknown", Satisfaction::Unknown),
             sat("unsat", Satisfaction::Unsatisfied),
         ];
-        let residual = plan_residual(bearing, &satisfaction, &[]);
+        let residual = plan_residual(bearing, &sounding(satisfaction, vec![]));
         let alarms: Vec<&str> = residual
             .surfaced
             .iter()
@@ -524,7 +590,7 @@ mod tests {
                 effect: CoverageEffect::Disjoint,
             },
         ];
-        let residual = plan_residual(bearing, &[], &coverage);
+        let residual = plan_residual(bearing, &sounding(vec![], coverage));
         assert!(
             residual
                 .surfaced
@@ -541,7 +607,7 @@ mod tests {
     #[test]
     fn equal_sigil_targets_are_not_deduplicated() {
         let bearing = Bearing::new(vec![corr("same", 1), corr("same", 2)]);
-        let residual = plan_residual(bearing, &[], &[]);
+        let residual = plan_residual(bearing, &sounding(vec![], vec![]));
         assert_eq!(residual.course.corrections().len(), 2);
     }
 
@@ -552,7 +618,7 @@ mod tests {
             sat("x", Satisfaction::Satisfied),
             sat("x", Satisfaction::Unsatisfied),
         ];
-        let residual = plan_residual(bearing, &satisfaction, &[]);
+        let residual = plan_residual(bearing, &sounding(satisfaction, vec![]));
         // A contradiction is not unambiguous certification, so the target is retained.
         assert_eq!(residual.course.corrections().len(), 1);
     }
@@ -561,7 +627,10 @@ mod tests {
     fn is_converged_when_course_and_surfaced_are_both_empty() {
         // Every target satisfied, nothing surfaced -> fully converged.
         let bearing = Bearing::new(vec![corr("a", 1)]);
-        let residual = plan_residual(bearing, &[sat("a", Satisfaction::Satisfied)], &[]);
+        let residual = plan_residual(
+            bearing,
+            &sounding(vec![sat("a", Satisfaction::Satisfied)], vec![]),
+        );
         assert!(residual.course.corrections().is_empty());
         assert!(residual.surfaced.is_empty());
         assert!(residual.is_converged());
@@ -576,7 +645,7 @@ mod tests {
             inflight: InFlightIndex(0),
             effect: CoverageEffect::Conflicts,
         }];
-        let residual = plan_residual(bearing, &[], &coverage);
+        let residual = plan_residual(bearing, &sounding(vec![], coverage));
         assert!(residual.course.corrections().is_empty());
         assert!(!residual.surfaced.is_empty());
         assert!(!residual.is_converged());
@@ -586,7 +655,10 @@ mod tests {
     fn non_empty_course_is_not_converged() {
         // A retained target means work remains, regardless of surfaced findings.
         let bearing = Bearing::new(vec![corr("a", 1)]);
-        let residual = plan_residual(bearing, &[sat("a", Satisfaction::Unsatisfied)], &[]);
+        let residual = plan_residual(
+            bearing,
+            &sounding(vec![sat("a", Satisfaction::Unsatisfied)], vec![]),
+        );
         assert!(!residual.course.corrections().is_empty());
         assert!(!residual.is_converged());
     }
@@ -602,7 +674,10 @@ mod tests {
             Reversibility::Reversible,
             OpaqueBody,
         )]);
-        let residual = plan_residual(bearing, &[sat("a", Satisfaction::Satisfied)], &[]);
+        let residual = plan_residual(
+            bearing,
+            &sounding(vec![sat("a", Satisfaction::Satisfied)], vec![]),
+        );
         assert!(residual.is_converged());
     }
 }

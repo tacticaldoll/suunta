@@ -21,8 +21,8 @@
 //! correction marked `Conflicts`.
 
 use suunta::{
-    Bearing, Correction, CoverageEffect, CoverageFinding, InFlightIndex, Reversibility,
-    Satisfaction, SatisfactionFinding, Sigil, SurfacedFinding,
+    Bearing, Correction, CoverageEffect, CoverageFinding, Fix, InFlightIndex, Reversibility,
+    Satisfaction, SatisfactionFinding, Sigil, Sounding, SurfacedFinding,
 };
 
 /// A domain payload. The core carries it opaquely and never reads it.
@@ -154,7 +154,8 @@ fn clean_domain_halts_via_is_converged() {
 
     let mut fulfilled = false;
     for cycle in 0..MAX_CYCLES {
-        let residual = suunta::plan_residual(bearing(), &observe_clean(cycle), &[]);
+        let sounding = Sounding::new(Fix::new(observe_clean(cycle)), vec![]);
+        let residual = suunta::plan_residual(bearing(), &sounding);
         if residual.is_converged() {
             fulfilled = true;
             break;
@@ -177,7 +178,8 @@ fn four_trajectories_halt_by_disposition() {
 
     for cycle in 0..MAX_CYCLES {
         cycles_run += 1;
-        let residual = suunta::plan_residual(bearing(), &observe(cycle), &coverage());
+        let sounding = Sounding::new(Fix::new(observe(cycle)), coverage());
+        let residual = suunta::plan_residual(bearing(), &sounding);
 
         // Layer 1: the one mechanical read the core provides.
         if residual.is_converged() {

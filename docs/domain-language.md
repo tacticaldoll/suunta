@@ -14,11 +14,14 @@ Domain          -> Bearing    (desired targets)       ┘   -> Course (residual 
 
 - **Sounding** — one convergence cycle. In it the domain reads reality and certifies,
   per `Bearing` target, whether it is met — yielding a `Fix`. (Nautical: taking a
-  depth or position measurement.)
+  depth or position measurement.) Realized as the `Sounding` type: one cycle's certified
+  readings — the `Fix` and coverage findings — carrying no domain payload, fed with the
+  `Bearing` to `plan_residual`.
 - **Fix** — the domain's certified satisfaction of the `Bearing`'s targets: for each,
   whether reality meets it. A reading taken *against intent*, which only the domain can
   take, since comparing reality to a desired target is a meaning comparison. Not a raw
-  observation — the core consumes these verdicts, never reality itself.
+  observation — the core consumes these verdicts, never reality itself. Realized as the
+  `Fix` type, aggregating the per-target `SatisfactionFinding`s.
 - **Bearing** — the desired target state, supplied by the domain. What *should be*.
 - **Drift** — the `Bearing` targets a `Fix` does not certify satisfied. `Correction`s
   close it; the residual `Course` retains those not already covered by a relevant
