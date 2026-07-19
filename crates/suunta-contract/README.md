@@ -2,8 +2,9 @@
 
 The isolated core contract for Suunta: sans-I/O convergence planning.
 
-`suunta-contract` computes the residual `Course` — the `Correction`s that steer an
-observed `Fix` toward a desired `Bearing` — and makes no semantic judgment of its own:
+`suunta-contract` computes the residual `Course` — the `Correction`s that remain of a
+desired `Bearing` once the domain's verdicts have certified targets done — and makes no
+semantic judgment of its own:
 identity (`Sigil`), target satisfaction, relevance, and settlement are all
 domain-supplied. It exposes no `async fn`, reads no ambient clock, and performs no
 I/O; a runtime drives it.
