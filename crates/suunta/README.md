@@ -6,14 +6,15 @@ compose.
 `suunta` is a pure re-export facade — it carries no logic of its own. It re-exports
 the compose-level surface you need to run a convergence loop end to end: the
 navigation vocabulary (`Bearing`, `Correction`, `Course`, `Sigil`, `Reversibility`),
-the domain's verdicts (`Satisfaction`, `CoverageEffect`, and their findings), the
-residual output (`Residual`, `SurfacedFinding`), and the planner `plan_residual`.
-This is the recommended crate to depend on.
+the domain's verdicts (`Satisfaction`, `CoverageEffect`, and their findings) bundled as
+one cycle's readings (`Fix`, `Sounding`), the residual output (`Residual`,
+`SurfacedFinding`), and the planner `plan_residual`. This is the recommended crate to
+depend on.
 
 Suunta owns one mechanism — the residual filter — and outsources every semantic
-judgment to the domain: given a desired `Bearing` and the domain's certified
-satisfaction and coverage verdicts, `plan_residual` computes the residual `Course`
-(the `Correction`s that remain to converge) and makes no judgment of its own.
+judgment to the domain: given a desired `Bearing` and a per-cycle `Sounding` (the
+domain's certified `Fix` and coverage verdicts), `plan_residual` computes the residual
+`Course` (the `Correction`s that remain to converge) and makes no judgment of its own.
 
 Suunta's whole public surface is compose-level, so this facade withholds nothing;
 there is no advanced kernel to reach for through
