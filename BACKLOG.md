@@ -95,38 +95,39 @@ user. Consumption may freeze provisionally; production waits for the consumer.
   the point; a single settlement *predicate* would fuse a mechanical read, a domain
   judgment, and a runtime concern into one surface that cannot honestly live in the
   core.
-  - *Layer 1 — mechanical single-cycle read (consumption).* "Is the residual `Course`
-    empty and are the surfaced findings clear?" This is a pure read of the `Residual`
-    the core already emits, expressible today with the shipped API
-    (`residual.course.corrections().is_empty() && residual.surfaced.is_empty()`).
-    Whether to lift it into a thin **consumption** classifier on `Residual` — e.g. a
-    `disposition() -> Settlement { Converged | Pending | Blocked }` that only reads the
-    residual's shape, never inspects a `Body`, and judges no meaning — is to be decided
-    by an actual convergence-loop consumer, not designed ahead of one. It may prove a
-    phantom: if the shipped API already suffices, this layer closes with no new surface.
-  - *Layer 2 — single-cycle disposition (domain production).* "Is a retained
-    `Unsatisfied` target a transient miss (keep correcting) or a permanent breach
-    (terminal)? Does a surfaced `Conflicting`/`Superseded` finding block settlement?"
-    This is a semantic judgment — the fourth face of the semantic bill — so it is the
-    domain's, evaluated in the consumer's loop body. Per the consumption/production
-    discipline above, a user-**implemented** settlement-**production** trait must NOT be
-    frozen ahead of its first real consumer. Leaning: the core provides no settlement
-    trait at all; the domain judges disposition in its own loop, and the core stays a
-    pure per-cycle planner.
-  - *Layer 3 — cross-cycle termination (runtime/driver).* "No progress for N cycles →
-    stalled", "attempt another round?". This needs cross-`Sounding` state, which the
-    core refuses (functional-per-cycle). It is therefore inherently a runtime/driver
-    concern, deferred until a real driver forces it — the same trigger as the async
-    variant below.
-  - **How this gets settled.** A minimal convergence-loop consumer — a composition
-    example that actually loops to convergence over the shipped `plan_residual` — is the
-    legitimate first consumer that can force Layers 1 and 2. To have teeth it must
-    exercise four trajectories, or it rubber-stamps a too-simple shape: a target that
-    converges (fulfilled), one stuck `Unknown` (uncertain termination), one permanently
-    `Unsatisfied` (breach vs. endless retry), and an in-flight `Conflicts` (does a
-    conflict block settlement?). A self-authored example is a strawman; adversarial
-    review is the counterweight. Layer 3 is out of an example's reach and must not be
-    forced by one.
+  - *Layer 1 — mechanical single-cycle read (consumption). **Resolved.*** "Is the
+    residual `Course` empty and are the surfaced findings clear?" The core exposes one
+    pure, policy-free read — `Residual::is_converged` (true iff the `Course` is empty
+    **and** no findings are surfaced) — and nothing richer. The three-way
+    `Settlement { Converged | Pending | Blocked }` classifier once sketched here is
+    **rejected**: deciding whether a `Conflicting` or `UnknownRetained` finding is
+    *blocking* vs. *pending* is a disposition, not a mechanical read, so it belongs to
+    Layer 2, not the core. `is_converged` earns its place by closing a real silent
+    failure — a consumer checking only an empty `Course` would declare success while an
+    undisposed surfaced finding still lingers.
+  - *Layer 2 — single-cycle disposition (domain production). **Resolved.*** "Is a
+    retained `Unsatisfied` target a transient miss (keep correcting) or a permanent
+    breach (terminal)? Does a surfaced `Conflicting`/`Superseded` finding block
+    settlement?" This is a semantic judgment — the fourth face of the semantic bill — so
+    it stays the domain's, evaluated in the consumer's loop body. The core provides **no
+    settlement trait**; the composition example demonstrates the domain making the
+    retry / breach / abandon / hold calls itself, in its own vocabulary, while the core
+    stays a pure per-cycle planner.
+  - *Layer 3 — cross-cycle termination (runtime/driver). **Open, deferred.*** "No
+    progress for N cycles → stalled", "attempt another round?". This needs
+    cross-`Sounding` state, which the core refuses (functional-per-cycle). It is
+    inherently a runtime/driver concern, deferred until a real driver forces it — the
+    same trigger as the async variant below. The composition example holds its own loop
+    bound and progress check in the consumer, never in the core, which is exactly where
+    Layer 3 lives today.
+  - **How it was settled.** A minimal convergence-loop consumer
+    (`crates/suunta-contract/examples/converge.rs`) forced Layers 1 and 2 by driving four
+    trajectories in one run — a target that converges, one stuck `Unknown`, one
+    permanently `Unsatisfied`, and an in-flight `Conflicts`. Building it confirmed
+    `is_converged` is the whole of Layer 1 and that disposition is domain loop-body
+    policy (Layer 2). A self-authored example is a strawman guarded by the adversarial
+    review at propose and apply; the example self-asserts each trajectory's outcome so a
+    regression fails the gate rather than passing quietly.
 - **The unenforceable purity invariant.** "The core makes no semantic judgment" is
   not statically expressible — semantic comparison has no syntactic marker, so
   Tianheng cannot bite it the way it bites no-I/O or no-async. It stays review- and
