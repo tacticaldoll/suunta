@@ -72,3 +72,24 @@ divergent subset.
 - **WHEN** the Definition of Done is documented
 - **THEN** `AGENTS.md` holds the complete gate list and other docs point to it
 
+### Requirement: Composition Is Demonstrated Executably
+The workspace SHALL carry an executable example that drives a full convergence loop over
+the public API of the planning contract, so composability is an enforced, non-regressing
+property rather than a claim. The example SHALL consume only the public API, hold any loop
+state in the consumer rather than the core, and exercise four trajectories — a target that
+converges, a target left uncertain (`Unknown`), a target that never satisfies, and an
+in-flight correction marked conflicting — so its demonstration is earned rather than a
+happy-path stub. It SHALL run clean under the Definition of Done.
+
+#### Scenario: The example composes end-to-end via the public API
+- **WHEN** the example is run
+- **THEN** it drives repeated planning through the public API to a bounded halt without reaching into crate internals
+
+#### Scenario: The four trajectories are exercised
+- **WHEN** the example runs its stub domain
+- **THEN** it drives a converging target, an `Unknown`-retained target, a permanently unsatisfied target, and a conflicting in-flight correction within one run
+
+#### Scenario: A broken composition fails the gate
+- **WHEN** the example fails to compose or to reach its expected outcome
+- **THEN** running it under the Definition of Done fails rather than passing silently
+
