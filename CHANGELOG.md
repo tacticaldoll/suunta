@@ -4,6 +4,31 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-07-30
+
+Defines the finite consumption effects Suunta's residual mechanism owns, separating
+them from the unrestricted judgment production the domain still owns. **Breaking**: a
+source-breaking enum migration at the public API surface.
+
+### Changed
+
+- **BREAKING: `CoverageEffect::Supersedes` is renamed to `Superseded`.** Consumers
+  matching or constructing `CoverageEffect::Supersedes` must update to
+  `CoverageEffect::Superseded`; the enum's internal handling is now exhaustive.
+- **BREAKING: `CoverageEffect::Disjoint` is removed.** It was a mechanically inert
+  effect — surfacing nothing and changing no disposition. A consumer classifying two
+  findings as disjoint retains that classification entirely downstream, without
+  supplying a Suunta effect for it.
+- Defines conservative satisfaction and independent coverage folds as the residual
+  mechanism's owned computation. No consumer trait, driver, execution, disposition,
+  settlement, or runtime policy is added — the noun/verb boundary settled in
+  `BACKLOG.md` and `PROJECT.md` is unchanged, only synced into durable specifications
+  and project documentation more precisely.
+- **Governance upgraded to Tianheng 0.3.0**, adopting its composed capabilities
+  through one Constitution feeding the runner, workspace-coverage assertion, and a
+  freshness-gated `AGENTS.suunta-law.md` projection. No semantic, runtime, or API
+  policy was added by the governance upgrade itself.
+
 ## [0.1.1] - 2026-07-17
 
 An identity-and-governance release. No change to the public API surface: the same items
@@ -67,5 +92,6 @@ types), the curated `suunta` facade, and executable Tianheng governance.
   `is_converged`), a single-cycle disposition (the domain's), and cross-cycle termination
   (a driver's, deferred). See `BACKLOG.md`.
 
+[0.2.0]: https://github.com/tacticaldoll/suunta/releases/tag/v0.2.0
 [0.1.1]: https://github.com/tacticaldoll/suunta/releases/tag/v0.1.1
 [0.1.0]: https://github.com/tacticaldoll/suunta/releases/tag/v0.1.0
