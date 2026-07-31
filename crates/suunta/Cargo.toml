@@ -1,0 +1,15 @@
+[package]
+name = "suunta"
+description = "Curated entrypoint for Suunta: a thin, sans-I/O convergence-planning core you compose."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+keywords = ["convergence", "planning", "sans-io", "residual", "reconciliation"]
+categories = ["rust-patterns"]
+publish.workspace = true
+
+[dependencies]
+suunta-contract.workspace = true
