@@ -16,5 +16,4 @@ publish = true
 
 [workspace.dependencies]
 suunta-contract = { path = "crates/suunta-contract", version = "0.1.1" }
-tianheng = "0.1.9"
-guibiao = "0.1.9"
+tianheng = "0.3.0"

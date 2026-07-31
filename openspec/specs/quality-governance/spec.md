@@ -5,25 +5,30 @@ Define Suunta's executable governance: the Tianheng constitution's dependency bo
 ## Requirements
 ### Requirement: Executable Constitution
 Suunta SHALL enforce its architecture with an executable Tianheng constitution
-(`suunta-governance`), so the boundaries prose claims are gated, not merely asserted.
-The gate SHALL depend only on governance-family tooling, never on the workspace graph
-it judges.
+(`suunta-governance`), so the boundaries prose claims are gated, not merely
+asserted. The gate SHALL use Tianheng's supported composed adopter surface and
+SHALL depend directly only on `tianheng`, never on an individual governance
+instrument or a workspace crate under judgment.
 
 #### Scenario: The constitution runs clean on the workspace
 - **WHEN** `cargo run -p suunta-governance -- check --manifest-path Cargo.toml` runs
 - **THEN** it reports no boundary violated for the current workspace
 
-#### Scenario: The gate is independent of the graph it judges
+#### Scenario: The gate depends only on the composed governance surface
 - **WHEN** `suunta-governance`'s dependencies are read
-- **THEN** they are limited to `tianheng` and `guibiao`, never a crate under judgment
+- **THEN** its only direct dependency is `tianheng`, never `guibiao`, another individual instrument, or a crate under judgment
 
 ### Requirement: Dependency Boundaries Are Enforced
 The constitution SHALL restrict each crate's dependencies: `suunta-contract` to no
-workspace or framework crate, `suunta-governance` to `tianheng` and `guibiao`, and
-the `suunta` facade to `suunta-contract` alone.
+workspace or framework crate, `suunta-governance` to `tianheng` alone, and the
+`suunta` facade to `suunta-contract` alone.
 
 #### Scenario: An unapproved core dependency fails the gate
 - **WHEN** `suunta-contract` gains a dependency outside its allowed set
+- **THEN** the constitution reports a dependency-boundary violation
+
+#### Scenario: An unapproved governance dependency fails the gate
+- **WHEN** `suunta-governance` gains a direct dependency other than `tianheng`
 - **THEN** the constitution reports a dependency-boundary violation
 
 #### Scenario: An unapproved facade dependency fails the gate
@@ -31,14 +36,41 @@ the `suunta` facade to `suunta-contract` alone.
 - **THEN** the constitution reports a dependency-boundary violation
 
 ### Requirement: Sans-I/O Purity Is Enforced
-The constitution SHALL bite the core's sans-I/O purity: `suunta-contract` SHALL call
-no `std::io`/`fs`/`net`/`process`, read no ambient clock, and expose no `async fn`
-(including submodules). This static tooth complements review and is partial by nature
-(macro-expanded I/O is invisible to a source scan).
+The constitution SHALL bite the core's sans-I/O purity:
+`suunta-contract` SHALL call no `std::io`/`fs`/`net`/`process`, read no ambient
+clock, and expose no `async fn` (including submodules). The ambient-clock and
+async-exposure reactions SHALL be declared together through Tianheng's
+`SansIoPure` profile with one accepted purity reason, while the four explicit I/O
+source reactions SHALL remain separately declared because the profile does not
+observe them. These static teeth complement review and remain partial by nature
+(for example, macro-expanded I/O is invisible to a source scan).
 
 #### Scenario: An exposed async fn in the core fails the gate
 - **WHEN** `suunta-contract` exposes an `async fn`
-- **THEN** the async-exposure boundary reports a violation
+- **THEN** the async-exposure boundary produced by the `SansIoPure` profile reports a violation
+
+#### Scenario: An ambient clock read in the core fails the gate
+- **WHEN** `suunta-contract` calls a `std::time` path ending in `now`
+- **THEN** the clock boundary produced by the `SansIoPure` profile reports a violation
+
+#### Scenario: Explicit I/O remains independently guarded
+- **WHEN** `suunta-contract` calls `std::io`, `std::fs`, `std::net`, or `std::process`
+- **THEN** the corresponding explicit source boundary reports a violation independently of the composed profile
+
+### Requirement: Accepted Law Has A Fresh Human Projection
+Suunta SHALL check in a human- and agent-readable Markdown projection generated
+from the accepted Rust constitution. The Rust declaration SHALL remain the
+authority, the projection SHALL identify itself as generated and
+non-authoritative, and a test SHALL fail when the checked-in projection is
+missing, unreadable, or stale.
+
+#### Scenario: A stale projection fails the gate
+- **WHEN** the accepted constitution changes without regenerating the checked-in Markdown projection
+- **THEN** the projection-freshness test fails and names the regeneration command
+
+#### Scenario: The projection adds no independent law
+- **WHEN** a contributor reads the checked-in projection
+- **THEN** its preamble identifies the Rust constitution as authority and directs the contributor not to edit the projection by hand
 
 ### Requirement: The Facade Is A Pure Re-Export Surface
 The constitution SHALL enforce that the `suunta` facade library holds only
@@ -98,4 +130,3 @@ divergent subset.
 #### Scenario: The Definition of Done is stated once
 - **WHEN** the Definition of Done is documented
 - **THEN** `AGENTS.md` holds the complete gate list and other docs point to it
-

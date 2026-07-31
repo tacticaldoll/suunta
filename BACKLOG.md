@@ -257,6 +257,12 @@ Inherited discipline first, then this project's own resolved design decisions.
   structural shadow, faithful (non-gameable) proxy, stable judgment, and worth the
   `prose ⟷ tooth` sync cost. Otherwise its honest home is prose, review, or a test. See
   `AGENTS.md` ("Governance and Conformance").
+- **Tianheng law projection is generated, not a second authority.** The accepted Rust
+  constitution is projected into `AGENTS.suunta-law.md` through Tianheng's own Markdown
+  renderer and byte-checked for freshness. The governance crate depends directly only
+  on Tianheng's composed adopter surface; its clock and async purity reactions use the
+  `SansIoPure` profile, while the explicit I/O reactions and Suunta-specific
+  prose/facade checks remain separate.
 
 ## Dispositions: Rejected, Placed Downstream, Deferred
 
