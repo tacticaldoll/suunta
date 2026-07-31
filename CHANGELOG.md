@@ -4,21 +4,23 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.0] - 2026-07-14
 
-_0.1.0 is being prepared; it has not yet been published to crates.io._
+The initial release: the residual planner, the navigation vocabulary (realized as
+types), the curated `suunta` facade, and executable Tianheng governance.
 
 ### Added
 
 - **The residual planner** (`suunta-contract`): `plan_residual` computes the residual
   `Course` — the `Correction`s that steer an observed state toward a desired `Bearing` —
-  from domain-supplied satisfaction and coverage findings. Only positively-certified
-  targets are omitted; absence, `Unknown`, and `Unsatisfied` are retained
-  (false-negative-safe), and uncertainty, supersession, and conflict are surfaced, never
-  disposed.
+  from a `Bearing` and a per-cycle `Sounding` (the domain's `Fix` — satisfaction verdicts
+  — and coverage findings). Only positively-certified targets are omitted; absence,
+  `Unknown`, and `Unsatisfied` are retained (false-negative-safe), and uncertainty,
+  supersession, and conflict are surfaced, never disposed.
 - **Navigation vocabulary**: `Sigil`, `Correction`, `Course`, `Bearing`, `Reversibility`,
-  `Satisfaction`, `SatisfactionFinding`, `CoverageEffect`, `CoverageFinding`,
-  `InFlightIndex`, `SurfacedFinding`, and `Residual`.
+  `Satisfaction`, `SatisfactionFinding`, `Fix`, `CoverageEffect`, `CoverageFinding`,
+  `InFlightIndex`, `Sounding`, `SurfacedFinding`, and `Residual`. A `Sounding` is one
+  cycle's certified readings (`Fix` + coverage) and carries no domain payload.
 - **`Residual::is_converged`**: a pure, policy-free structural read reporting full
   convergence (the `Course` is empty and no findings are surfaced).
 - **Curated facade** (`suunta`): the recommended single entrypoint — a pure re-export of
