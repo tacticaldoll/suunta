@@ -7,6 +7,8 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 readme = "README.md"
+keywords = ["convergence", "planning", "sans-io", "residual", "reconciliation"]
+categories = ["rust-patterns"]
 publish.workspace = true
 
 [dependencies]
