@@ -55,20 +55,22 @@ boundary or the coverage gate fails.
 
 These are recorded so the repo can drive its own development; none is decided here.
 Discipline: keep judgment domain-supplied; the core only computes or evaluates,
-never compares meanings. Do not freeze a user-**implemented** judgment-**production**
-trait ahead of its first real consumer — but the planner MAY provisionally expose the
-minimum **consumption** envelope residual mechanics require (the planning effects the
-core acts on, the structural laws findings obey, calibration fixtures), because that
-envelope is produced by the domain and consumed by the core, not implemented by the
-user. Consumption may freeze provisionally; production waits for the consumer.
+never compares meanings. Each question is dispositioned by the noun/verb split (see
+`PROJECT.md`, and Disposition Discipline in `AGENTS.md`), never by deferring to a
+consumer that does not yet exist. The **consumption** envelope the residual mechanics
+require (the planning effects the core acts on, the structural laws findings obey,
+calibration fixtures) is Suunta's *noun* — produced by the domain, consumed by the core,
+not implemented by the user — and may be articulated now. Judgment **production** (a
+trait the user implements) is the consumer's *verb*: declared downstream, permanently not
+Suunta's — never frozen into the core and never parked "awaiting a consumer".
 
 - **Coverage-verdict shape.** How the domain supplies relevance. **Update (shipped):**
   the *consumption* side is now realized in the planner and specs (`The Residual Omits
   Only Positively-Certified Targets`, `Fix Is Domain-Certified Satisfaction, Not
   Observation`, `Uncertainty And Disposition Are Surfaced, Not Resolved`); only the
   *production* side remains open.
-  **Clarified boundary:** split the *consumption* contract (realized) from the
-  *production* contract (waits for the first consumer).
+  **Clarified boundary:** split the *consumption* contract (realized, Suunta's noun)
+  from the *production* contract (the consumer's verb, downstream).
   - *Consumption (provisionally freezable):* the core consumes domain-produced findings
     as opaque values and acts on a fixed set of **planning effects** it must mechanically
     distinguish — (a) an in-flight `Correction` already covers the residual → suppress a
@@ -84,9 +86,11 @@ user. Consumption may freeze provisionally; production waits for the consumer.
     instance-reference law and the positive-certification / false-negative-bound law are
     now requirements in `convergence-contract` ("Coverage Findings Are Instance-Referenced
     And Positively Certified"); only the *production* side below remains open.
-  - *Production (waits for the consumer):* how the domain computes, keys, indexes,
-    batches, or caches findings; any `may_overlap`/candidate mechanism; any
-    user-implemented judgment trait. Never frozen ahead of a real consumer.
+  - *Production (the domain's verb — downstream):* how the domain computes, keys,
+    indexes, batches, or caches findings; any `may_overlap`/candidate mechanism; any
+    user-implemented judgment trait. This is the consumer's to build; Suunta's pattern is
+    complete with the consumption envelope alone, so production is declared downstream,
+    not held open awaiting a consumer.
   - **Who cancels a `Superseded` One-Way?** No one in the core. Supersession is a
     *cycle-scoped relation* (a function of this `Bearing`/`Fix`/context), surfaced as a
     finding on the planning output — never a mutable lifecycle status on `Correction`.
@@ -117,13 +121,12 @@ user. Consumption may freeze provisionally; production waits for the consumer.
     settlement trait**; the composition example demonstrates the domain making the
     retry / breach / abandon / hold calls itself, in its own vocabulary, while the core
     stays a pure per-cycle planner.
-  - *Layer 3 — cross-cycle termination (runtime/driver). **Open, deferred.*** "No
+  - *Layer 3 — cross-cycle termination (runtime/driver). **Placed downstream.*** "No
     progress for N cycles → stalled", "attempt another round?". This needs
     cross-`Sounding` state, which the core refuses (functional-per-cycle). It is
-    inherently a runtime/driver concern, deferred until a real driver forces it — the
-    same trigger as the async variant below. The composition example holds its own loop
-    bound and progress check in the consumer, never in the core, which is exactly where
-    Layer 3 lives today.
+    inherently a runtime/driver concern — the driver's *verb*, not the core's — like the
+    async variant below. The composition example holds its own loop bound and progress
+    check in the consumer, never in the core, which is exactly where Layer 3 lives today.
   - **How it was settled.** A minimal convergence-loop consumer — now the facade
     integration test (`crates/suunta/tests/convergence_loop.rs`), ported from the retired
     `suunta-contract` example — forced Layers 1 and 2 by driving four trajectories in one
@@ -155,13 +158,16 @@ user. Consumption may freeze provisionally; production waits for the consumer.
   - Obligation form follows what the core does with it: a *carried* value is a field with
     its law stated in the spec **when landed**; only a behaviour the core *calls* would be
     a trait — and the core calls none here.
-  - **Least-commitment:** landing waits for the first real consumer that reconciles content
-    identity to force the shape; recorded now only as a determined candidate. Framed
-    generally (any identity-reconciliation consumer); if it cannot stand as a general
-    identity contract, the fingerprint rides inside the opaque `Body` and the core carries
-    nothing new.
-- **Async variant.** Deferred until a real driver forces it; the sans-I/O core is
-  agnostic to sync/async at the edge.
+  - **Disposition (downstream).** Content-identity reconciliation is a consumer *verb* —
+    the core never compares the fingerprint — so the fingerprint is the consumer's data,
+    carried inside the opaque `Body`, and Suunta's pattern is complete without a
+    first-class `Fingerprint` noun. Should a future general identity contract genuinely
+    require the core to *carry* (never compare) a fingerprint as a pattern noun, that is
+    decided then from Suunta's own identity as a new change — not parked here awaiting a
+    consumer to force the shape.
+- **Async variant.** Not deferred — placed downstream. A pure function has nothing to
+  make `async`; async is the driver's *verb* at the edge, and the sans-I/O core is
+  agnostic to it. See Dispositions below.
 - **The driver/core seam — the shape is resolved, realization deferred.** Explored
   (see git history) by tracing what actually crosses the core boundary each cycle in
   the facade's convergence-loop test. When you try to draw a "driver contract", it
@@ -192,11 +198,11 @@ user. Consumption may freeze provisionally; production waits for the consumer.
     behaviour it must implement.
   - *Why the collapse is the answer.* The core already owns the whole honest seam and
     the driver is correctly empty, which is precisely why Layer 3 and the async variant
-    wait for a *real* driver rather than a speculative contract. Positioning (candidate
-    for `PROJECT.md`, not yet captured there): the framework owns the **nouns** (the
-    vocabulary of exchange), the consumer owns the **verbs** (judgment, execution,
-    driving); Suunta's governance teeth point **inward** (they constrain its own
-    purity), never **outward** at the consumer's design — the inverse of Tower.
+    are the driver's *verbs*, placed downstream, rather than a speculative contract
+    Suunta owns. Positioning (now captured in `PROJECT.md`): the framework owns the
+    **nouns** (the vocabulary of exchange), the consumer owns the **verbs** (judgment,
+    execution, driving); Suunta's governance teeth point **inward** (they constrain its
+    own purity), never **outward** at the consumer's design — the inverse of Tower.
   - *One naming sub-decision — resolved: B1b shipped in 0.1.0.* It was naming-only — no
     new capability, no cross-cycle state, no judgment — inside the consumption envelope
     this file permits to freeze provisionally. `Sounding` and `Fix`, once defined in
@@ -243,13 +249,14 @@ Inherited discipline first, then this project's own resolved design decisions.
 
 The public docs (`README.md`, `PROJECT.md`) use *deferred* as a loose umbrella for
 "not in 0.1.0". This section is the precise split, because most of what reads as
-"deferred" is not awaiting core work at all. Three dispositions, distinguished by one
-test — **is there any future evidence that would move this into the core?** No, at the
-identity level → *rejected*. No, because its home is already decided elsewhere →
-*placed downstream* (only a demonstration may be pending). Yes, and even the home is
-undecided → *genuinely deferred* (frozen only when a real consumer validates the
-shape). For a noun-only core most items collapse out of the third bucket; how much
-genuinely remains there measures how much latent *verb* the core carries.
+"deferred" is not awaiting core work at all. Every open item resolves by the noun/verb
+split (see `PROJECT.md`, and Disposition Discipline in `AGENTS.md`) into one of two
+settled homes — **rejected** (never core, at the identity level) or **placed
+downstream** (a consumer *verb*, its home decided elsewhere; only a demonstration may be
+pending). "Awaiting a real consumer to force the shape" is not a disposition: an item is
+Suunta's owned noun or the consumer's downstream verb, decided now from identity. That
+the once-"genuinely deferred" bucket below collapses to empty confirms the core carries
+no latent *verb*.
 
 ### Rejected — never core (no consumer flips these)
 
@@ -278,16 +285,24 @@ most an example, and it lives downstream.
 - **The async edge.** A pure function has nothing to make `async`; what is async is the
   downstream driver at the edge. (Unlike pacta, whose async variant is meaningful
   because it is an `async` trait with persistence I/O.)
-
-### Genuinely deferred — home undecided, awaiting the first real consumer
-
 - **The coverage-*production* contract.** How the domain computes, keys, indexes,
-  batches, or caches findings, and any user-implemented judgment trait — never frozen
-  ahead of a real consumer. Its disposition is itself open: it may land as an opaque
-  core value or ride inside `Body` (then the core carries nothing new — i.e. downstream).
-- **Carrying a content `Fingerprint`.** An opaque value peer to `Sigil`, or — if it
-  cannot stand as a general identity contract — inside the opaque `Body`. Waits for the
-  first identity-reconciliation consumer to force the shape.
+  batches, or caches findings, and any user-implemented judgment trait — the domain's
+  *verb*. Suunta's pattern is complete with the shipped consumption envelope, so
+  production is the consumer's to build. Were the core ever to *carry* an opaque coverage
+  value, that would be a new owned noun decided from identity, not a shape awaiting a
+  consumer.
+- **Carrying a content `Fingerprint`.** Identity reconciliation is a consumer *verb*, and
+  the core never compares the fingerprint — so it rides inside the opaque `Body` and the
+  core carries nothing new. A first-class carried `Fingerprint` noun would be a future
+  change decided from Suunta's identity, not a shape awaiting a consumer.
+
+### Genuinely deferred — home undecided
+
+*Empty.* Under the noun/verb split (see `PROJECT.md`, and Disposition Discipline in
+`AGENTS.md`), an open item is either an owned noun or a downstream verb; nothing is
+parked "awaiting a real consumer to force the shape". The former occupants — the
+coverage-production contract and carrying a content `Fingerprint` — are now placed
+downstream above.
 
 ## Prioritization
 
