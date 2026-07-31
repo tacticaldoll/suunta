@@ -1,19 +1,22 @@
 # Suunta
 
 Suunta is a thin, sans-I/O **convergence-planning** core for Rust: given a desired
-`Bearing` and an observed `Fix`, it computes the residual `Course` — the
-`Correction`s needed to converge — while making no semantic judgment of its own.
+`Bearing` and the domain's certified satisfaction of each target (the `Fix`), it
+computes the residual `Course` — the `Correction`s that remain to converge — by
+filtering the `Bearing` to what the domain has not certified done, while making no
+semantic judgment of its own.
 
 ```text
-Sounding  -> Fix ┐
-Domain    -> Bearing ┤ residual -> Course (Corrections, each with a stable Sigil)
-in-flight ─────────┘
+Domain certifies reality against the Bearing's targets:
+  per target    -> Fix       (satisfaction verdict)  ┐
+  per in-flight -> coverage   (relevance verdict)     ┤ Suunta filters the Bearing
+Domain          -> Bearing    (desired targets)       ┘   -> Course (residual Corrections, each with a Sigil)
 ```
 
 It is for the narrow space between "I keep reconciling desired state against
 observed state" and "I do not want a workflow engine to own my domain's meaning."
-Suunta owns one mechanism — the residual — and outsources every semantic judgment
-to the domain.
+Suunta owns one mechanism — the residual filter — and outsources every semantic
+judgment to the domain; it consumes the domain's verdicts, never reality itself.
 
 ## Status (0.1.0)
 
@@ -25,9 +28,10 @@ production-side coverage contract, and an async edge — is recorded in `BACKLOG
 
 ## What Suunta owns, and what the domain supplies
 
-Suunta owns a *mechanism* and no *meaning*. It computes *what* diverges between
-intent and reality; it never decides what two things *mean*, whether one is
-*relevant*, or whether an obligation is *settled*. Those are yours.
+Suunta owns a *mechanism* and no *meaning*. It filters the `Bearing` to *what
+remains* once the domain's verdicts have certified targets satisfied or covered; it
+never decides what two things *mean*, whether one is *relevant*, or whether an
+obligation is *settled*. Those are yours.
 
 ```text
 The domain supplies (meaning)                 Suunta owns (mechanism, no meaning)
@@ -37,9 +41,9 @@ The domain supplies (meaning)                 Suunta owns (mechanism, no meaning
   predicate    when an obligation is settled      surfacing Unknown / supersession / conflict
 ```
 
-The core decides which `Correction`s close the drift; it does not decide their
-meaning, their durability, their gating, or their compensation — those are downstream
-consumer concerns.
+The core filters the `Bearing` to the `Correction`s that remain, given the domain's
+verdicts; it does not decide their meaning, their durability, their gating, or their
+compensation — those are downstream consumer concerns.
 
 ## Why sans-I/O and no semantic judgment
 

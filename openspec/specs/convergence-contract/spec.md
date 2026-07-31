@@ -104,11 +104,11 @@ The planning core SHALL make no semantic judgment. Semantic identity, **target
 satisfaction**, relevance, and whether an obligation is settled SHALL be domain-supplied —
 as a `Sigil`, a **satisfaction verdict**, a coverage verdict, and a settlement predicate
 respectively. The core's role SHALL be limited to computing the residual and recording; it
-SHALL NOT compare meanings — in particular it cannot decide whether an observed `Fix` meets
-a desired `Bearing` target, which is why satisfaction is domain-supplied. This is the
-semantic bill of purity — now **four faces** of one purity choice: its cost — an undetected
-domain semantic error fails silently — SHALL be accepted rather than patched by pulling
-judgment into the core.
+SHALL NOT compare meanings — in particular it cannot decide whether reality meets a desired
+`Bearing` target, which is why satisfaction is domain-supplied and that per-target verdict
+is the `Fix`. This is the semantic bill of purity — now **four faces** of one purity
+choice: its cost — an undetected domain semantic error fails silently — SHALL be accepted
+rather than patched by pulling judgment into the core.
 
 #### Scenario: The four judgments are the domain's
 - **WHEN** the core needs semantic identity, target satisfaction, relevance, or a settlement decision
