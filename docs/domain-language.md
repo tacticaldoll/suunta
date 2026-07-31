@@ -30,9 +30,13 @@ in-flight ─────────┘
 
 ## Domain-supplied judgments (the semantic bill of purity)
 
-The core makes no semantic judgment. Three judgments are the domain's obligation:
+The core makes no semantic judgment. Four judgments are the domain's obligation:
 
 - **Semantic identity** — the `Sigil` (above).
+- **Target satisfaction** — whether an observed `Fix` already meets a desired `Bearing`
+  target. The core cannot compare an observed state against a desired one; the domain
+  supplies a satisfaction verdict per target, and the core consumes it (this is the
+  `Fix` side of "`Bearing` diffed against `Fix`").
 - **Relevance (coverage verdict)** — which in-flight `Correction`s are relevant to a
   `Bearing` when computing the residual. The core does not compare meanings to decide
   relevance; the domain supplies the verdict.
@@ -40,7 +44,7 @@ The core makes no semantic judgment. Three judgments are the domain's obligation
   The domain declares it; the core (or a downstream evaluator) only evaluates it,
   never invents it.
 
-These three are one purity choice with three faces. Their cost — an undetected
+These four are one purity choice with four faces. Their cost — an undetected
 domain semantic error fails silently — is accepted deliberately. See `PROJECT.md`
 and `BACKLOG.md` for the rationale and the open questions.
 

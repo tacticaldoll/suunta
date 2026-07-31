@@ -43,18 +43,76 @@ as a residual (see "A Course Is A Residual") is realized by a later change.
 - **WHEN** a `Course` is formed from two `Correction`s carrying equal `Sigil`s
 - **THEN** the `Course` retains both; the core collapses nothing, because equality of meaning is not the core's to decide
 
-### Requirement: The Core Makes No Semantic Judgment
-The planning core SHALL make no semantic judgment. Semantic identity, relevance, and
-whether an obligation is settled SHALL be domain-supplied — as a `Sigil`, a coverage
-verdict, and a settlement predicate respectively. The core's role SHALL be limited to
-computing the residual and recording; it SHALL NOT compare meanings. This is the
-semantic bill of purity: its
-cost — an undetected domain semantic error fails silently — SHALL be accepted rather
-than patched by pulling judgment into the core.
+### Requirement: The Residual Omits Only Positively-Certified Targets
+The residual `Course` SHALL contain every `Bearing` target except those a domain finding
+positively certifies as `Satisfied` (reality already meets it) or `Covered` (a relevant
+in-flight `Correction` handles it). A target that is `Unsatisfied`, uncovered, `Unknown`,
+or has no finding SHALL be retained. Absence and uncertainty SHALL NOT omit a target — only
+positive certification omits. This realizes the computation deferred by "A Course Is A
+Residual".
 
-#### Scenario: The three judgments are the domain's
-- **WHEN** the core needs semantic identity, relevance, or a settlement decision
-- **THEN** it consumes a domain-supplied `Sigil`, coverage verdict, or settlement predicate rather than deciding it
+#### Scenario: A satisfied or covered target is omitted
+- **WHEN** a `Bearing` target has a `Satisfied` satisfaction finding, or a `Covered` coverage finding naming a relevant in-flight `Correction`
+- **THEN** the target is omitted from the residual `Course`
+
+#### Scenario: Absence and uncertainty retain
+- **WHEN** a `Bearing` target has no finding, or an `Unsatisfied` or `Unknown` finding
+- **THEN** the target is retained in the residual `Course`
+
+### Requirement: Fix Is Domain-Certified Satisfaction, Not Observation
+`Fix` SHALL be expressed as domain-certified satisfaction findings — a `Satisfaction`
+verdict per referenced `Bearing` target — and SHALL NOT be a bare set of satisfied
+`Sigil`s nor a store of raw observations. Whether a target is satisfied is a domain
+judgment the core consumes; the core SHALL NOT read observation content or compute
+satisfaction itself.
+
+#### Scenario: Satisfaction is consumed, not computed
+- **WHEN** the core needs to know whether a `Bearing` target is satisfied
+- **THEN** it consumes a domain-supplied `Satisfaction` verdict rather than comparing an observed state against the desired one
+
+#### Scenario: Fix carries verdicts, not observations
+- **WHEN** a `Fix` is supplied to the planner
+- **THEN** it carries per-target satisfaction verdicts, and the core reads no observation body
+
+### Requirement: Uncertainty And Disposition Are Surfaced, Not Resolved
+The planner SHALL surface, on its output, each target retained under `Unknown` and each
+in-flight `Correction` a coverage finding marks superseded or conflicting. The core SHALL
+NOT cancel, compensate, or otherwise dispose of them, and SHALL name no execution-lifecycle
+state; disposition is a downstream/consumer concern.
+
+#### Scenario: Unknown retention is an observable finding
+- **WHEN** a target is retained only because its satisfaction is `Unknown`
+- **THEN** the planner surfaces it as an `Unknown`-retained finding, so the uncertainty is visible rather than silently over-planned
+
+#### Scenario: Supersession and conflict are surfaced, not disposed
+- **WHEN** a coverage finding marks an in-flight `Correction` superseded or conflicting
+- **THEN** the planner surfaces it on the output and takes no cancelling or compensating action
+
+### Requirement: The Planner Is Functional Per Cycle
+`plan_residual` SHALL be a pure function of a single cycle's inputs — a `Bearing`,
+satisfaction findings, and coverage findings — and SHALL hold no state across `Sounding`s.
+The core consumes domain-certified findings *about* in-flight `Correction`s (coverage
+findings), never the raw in-flight corrections themselves; it injects no time and performs
+no I/O.
+
+#### Scenario: The planner holds no cross-cycle state
+- **WHEN** `plan_residual` is invoked
+- **THEN** it reads only its arguments, retains nothing between invocations, and reads no ambient clock and performs no I/O
+
+### Requirement: The Core Makes No Semantic Judgment
+The planning core SHALL make no semantic judgment. Semantic identity, **target
+satisfaction**, relevance, and whether an obligation is settled SHALL be domain-supplied —
+as a `Sigil`, a **satisfaction verdict**, a coverage verdict, and a settlement predicate
+respectively. The core's role SHALL be limited to computing the residual and recording; it
+SHALL NOT compare meanings — in particular it cannot decide whether an observed `Fix` meets
+a desired `Bearing` target, which is why satisfaction is domain-supplied. This is the
+semantic bill of purity — now **four faces** of one purity choice: its cost — an undetected
+domain semantic error fails silently — SHALL be accepted rather than patched by pulling
+judgment into the core.
+
+#### Scenario: The four judgments are the domain's
+- **WHEN** the core needs semantic identity, target satisfaction, relevance, or a settlement decision
+- **THEN** it consumes a domain-supplied `Sigil`, satisfaction verdict, coverage verdict, or settlement predicate rather than deciding it
 
 #### Scenario: The cost is accepted, not patched
 - **WHEN** a domain supplies an incorrect semantic judgment
