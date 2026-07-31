@@ -239,11 +239,55 @@ Inherited discipline first, then this project's own resolved design decisions.
   findings into a body-free `Sounding` and drops raw `inflight`). Settled by the
   residual-planner landing, not left open.
 
-## Explicitly Deferred
+## Dispositions: Rejected, Placed Downstream, Deferred
 
-- Any semantic comparison inside the core (never — it is the domain's).
-- Durable execution, gating, and compensation of `Correction`s (downstream).
-- An async core variant (until a driver forces it).
+The public docs (`README.md`, `PROJECT.md`) use *deferred* as a loose umbrella for
+"not in 0.1.0". This section is the precise split, because most of what reads as
+"deferred" is not awaiting core work at all. Three dispositions, distinguished by one
+test — **is there any future evidence that would move this into the core?** No, at the
+identity level → *rejected*. No, because its home is already decided elsewhere →
+*placed downstream* (only a demonstration may be pending). Yes, and even the home is
+undecided → *genuinely deferred* (frozen only when a real consumer validates the
+shape). For a noun-only core most items collapse out of the third bucket; how much
+genuinely remains there measures how much latent *verb* the core carries.
+
+### Rejected — never core (no consumer flips these)
+
+- **Semantic comparison inside the core.** Comparing meanings is the domain's; the
+  core computes and records, never compares (the semantic bill of purity).
+- **Structural contradiction detection.** Comparing a `Sigil` against a content
+  fingerprint to spot a drifted identity is itself a comparison the pure core does not
+  make — a downstream identity-reconciliation consumer's, never here.
+- **A driver / loop / disposition / termination *trait* the user implements.** Giving
+  the seam a user-implemented behaviour rebuilds a Tower-style `Service`, the identity
+  Suunta is defined against. The seam stays values supplied to a pure function.
+
+### Placed downstream — core stance settled, only a demonstration pending
+
+The core's answer is decided ("not here — in the driver/consumer"); what remains is at
+most an example, and it lives downstream.
+
+- **Durable execution, gating, and compensation of `Correction`s.** Downstream consumer
+  concerns by identity.
+- **Settlement Layer 3 (cross-cycle termination).** Needs cross-`Sounding` state the
+  functional-per-cycle core refuses; its home is the driver/consumer loop, which the
+  facade `convergence_loop` test already demonstrates. Suunta ships no driver crate.
+- **The driver-seam realization.** The seam's *shape* shipped as nouns
+  (`plan_residual(&Bearing, &Sounding) -> Residual`); a "real driver" is a downstream
+  artifact, not core work.
+- **The async edge.** A pure function has nothing to make `async`; what is async is the
+  downstream driver at the edge. (Unlike pacta, whose async variant is meaningful
+  because it is an `async` trait with persistence I/O.)
+
+### Genuinely deferred — home undecided, awaiting the first real consumer
+
+- **The coverage-*production* contract.** How the domain computes, keys, indexes,
+  batches, or caches findings, and any user-implemented judgment trait — never frozen
+  ahead of a real consumer. Its disposition is itself open: it may land as an opaque
+  core value or ride inside `Body` (then the core carries nothing new — i.e. downstream).
+- **Carrying a content `Fingerprint`.** An opaque value peer to `Sigil`, or — if it
+  cannot stand as a general identity contract — inside the opaque `Body`. Waits for the
+  first identity-reconciliation consumer to force the shape.
 
 ## Prioritization
 
