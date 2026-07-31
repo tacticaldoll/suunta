@@ -7,9 +7,9 @@ role in the convergence loop; prefer the canonical term over synonyms.
 
 ```text
 Domain certifies reality against the Bearing's targets:
-  per target    -> Fix       (satisfaction verdict)  ┐
-  per in-flight -> coverage   (relevance verdict)     ┤ Suunta filters the Bearing
-Domain          -> Bearing    (desired targets)       ┘   -> Course (residual Corrections)
+  per target    -> Fix       (normalized satisfaction effect)  ┐
+  per in-flight -> coverage   (normalized planning effect)      ┤ Suunta filters the Bearing
+Domain          -> Bearing    (desired targets)                 ┘   -> Course (residual Corrections)
 ```
 
 - **Sounding** — one convergence cycle. In it the domain reads reality and certifies,
@@ -53,12 +53,32 @@ The core makes no semantic judgment. Four judgments are the domain's obligation:
   `Bearing` when computing the residual. The core does not compare meanings to decide
   relevance; the domain supplies the verdict.
 - **Settlement predicate** — when a `Correction`'s obligation counts as concluded.
-  The domain declares it; the core (or a downstream evaluator) only evaluates it,
-  never invents it.
+  The domain declares and evaluates it downstream; the core exposes only the
+  policy-free `Residual::is_converged` structural read.
 
 These four are one purity choice with four faces. Their cost — an undetected
 domain semantic error fails silently — is accepted deliberately. See `PROJECT.md`
 and `BACKLOG.md` for the rationale and the open questions.
+
+## Judgment production and planning effects
+
+The domain may use any internal taxonomy to make its satisfaction and relevance
+judgments. Before a `Sounding` reaches Suunta, the domain normalizes that meaning
+into the finite effects the residual mechanism consumes:
+
+- `Satisfaction::{Satisfied, Unsatisfied, Unknown}` answers one target-scoped
+  question. Only uniform `Satisfied` omits; uniform `Unsatisfied` retains;
+  absence, `Unknown`, or mixed answers retain and surface uncertainty.
+- `CoverageEffect::Covers(Sigil)` positively covers one semantic target.
+- `CoverageEffect::Superseded` says the current plan supersedes the referenced
+  in-flight instance.
+- `CoverageEffect::Conflicts` says the referenced instance cannot coexist with
+  the current plan.
+
+Coverage effects compose independently. Absence is the identity and never
+becomes positive coverage. A domain may know that an instance is disjoint, but
+that production-side classification has no core contribution and therefore is
+not a Suunta effect.
 
 ## Out of scope for the core
 

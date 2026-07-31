@@ -53,7 +53,8 @@ boundary or the coverage gate fails.
 
 ## Open Design Questions
 
-These are recorded so the repo can drive its own development; none is decided here.
+These records let the repo drive its own development; resolved dispositions remain
+here for provenance while genuinely open items are called out explicitly.
 Discipline: keep judgment domain-supplied; the core only computes or evaluates,
 never compares meanings. Each question is dispositioned by the noun/verb split (see
 `PROJECT.md`, and Disposition Discipline in `AGENTS.md`), never by deferring to a
@@ -64,33 +65,30 @@ not implemented by the user — and may be articulated now. Judgment **productio
 trait the user implements) is the consumer's *verb*: declared downstream, permanently not
 Suunta's — never frozen into the core and never parked "awaiting a consumer".
 
-- **Coverage-verdict shape.** How the domain supplies relevance. **Update (shipped):**
+- **Coverage-verdict shape. Resolved consumption algebra; production downstream.**
   the *consumption* side is now realized in the planner and specs (`The Residual Omits
   Only Positively-Certified Targets`, `Fix Is Domain-Certified Satisfaction, Not
-  Observation`, `Uncertainty And Disposition Are Surfaced, Not Resolved`); only the
-  *production* side remains open.
+  Observation`, `Uncertainty And Disposition Are Surfaced, Not Resolved`). The
+  *production* side is permanently downstream rather than open core work.
   **Clarified boundary:** split the *consumption* contract (realized, Suunta's noun)
   from the *production* contract (the consumer's verb, downstream).
-  - *Consumption (provisionally freezable):* the core consumes domain-produced findings
-    as opaque values and acts on a fixed set of **planning effects** it must mechanically
-    distinguish — (a) an in-flight `Correction` already covers the residual → suppress a
-    duplicate; (b) the current plan supersedes an in-flight one → surface a supersession
-    finding; (c) an in-flight one cannot safely coexist → surface a conflict, never
-    silently plan; (d) the domain positively certifies two are mutually ignorable →
-    exclude from coverage. A finding references a specific in-flight **instance** (not a
-    `Sigil`, since a `Course` does not dedup); **any in-flight instance with no finding is
-    `unknown` — retained, never treated as ignorable.** `Independent`/ignorable is a
-    positively-certified verdict, never derived from absence (the seam's false-negative
-    bound). The class *names/taxonomy* — whether exactly four, supersession
-    directionality, pairwise vs. aggregate — are NOT frozen. **Update (normative):** the
-    instance-reference law and the positive-certification / false-negative-bound law are
-    now requirements in `convergence-contract` ("Coverage Findings Are Instance-Referenced
-    And Positively Certified"); only the *production* side below remains open.
+  - *Consumption (settled):* Suunta owns only normalized effects with a mechanical
+    contribution. `Covers(Sigil)` is target-scoped and existentially/idempotently omits
+    the named target. `Superseded` and `Conflicts` are instance-scoped relative to the
+    current plan and surface the referenced `InFlightIndex`; the direction is that the
+    current plan supersedes the in-flight instance. Findings compose independently, so
+    coverage may omit a target while conflict or supersession keeps
+    `Residual::is_converged` false. The core invents no precedence or semantic
+    contradiction. Absence is the algebraic identity: it omits and surfaces nothing and
+    lets the core infer no reason. `Disjoint` was removed from the consumption vocabulary
+    because, without raw in-flight input, it was observationally identical to absence and
+    had no residual contribution. A finding still references a specific in-flight
+    **instance** (not a `Sigil`, since a `Course` does not dedup).
   - *Production (the domain's verb — downstream):* how the domain computes, keys,
-    indexes, batches, or caches findings; any `may_overlap`/candidate mechanism; any
-    user-implemented judgment trait. This is the consumer's to build; Suunta's pattern is
-    complete with the consumption envelope alone, so production is declared downstream,
-    not held open awaiting a consumer.
+    indexes, batches, caches, or normalizes findings — including a richer classification
+    such as disjointness — and any `may_overlap`/candidate mechanism or user-implemented
+    judgment trait. This is the consumer's to build; Suunta's pattern is complete with
+    the consumption algebra alone.
   - **Who cancels a `Superseded` One-Way?** No one in the core. Supersession is a
     *cycle-scoped relation* (a function of this `Bearing`/`Fix`/context), surfaced as a
     finding on the planning output — never a mutable lifecycle status on `Correction`.
@@ -263,6 +261,14 @@ Inherited discipline first, then this project's own resolved design decisions.
   on Tianheng's composed adopter surface; its clock and async purity reactions use the
   `SansIoPure` profile, while the explicit I/O reactions and Suunta-specific
   prose/facade checks remain separate.
+- **Verdict production is downstream; consumption effects are core nouns.** A domain may
+  classify reality and in-flight relations however it chooses, then supplies the finite
+  normalized effects Suunta's residual algebra consumes. Coverage uses mixed scopes based
+  on mechanical contribution (`Covers` targets a `Sigil`; `Superseded`/`Conflicts`
+  describe an `InFlightIndex` relative to the current plan), composes effects
+  independently, and treats absence as identity. The former `Disjoint` variant was
+  removed because it produced exactly the same core result as absence and therefore
+  belonged to production taxonomy, not the residual mechanism.
 
 ## Dispositions: Rejected, Placed Downstream, Deferred
 

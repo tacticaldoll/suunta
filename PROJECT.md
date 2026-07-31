@@ -26,9 +26,9 @@ one and must plan the corrections:
 
 ```text
 Domain certifies reality against the Bearing's targets:
-  per target    -> Fix       (satisfaction verdict)  ┐
-  per in-flight -> coverage   (relevance verdict)     ┤ Suunta filters the Bearing
-Domain          -> Bearing    (desired targets)       ┘   -> Course (residual Corrections, each with a Sigil)
+  per target    -> Fix       (normalized satisfaction effect)  ┐
+  per in-flight -> coverage   (normalized planning effect)      ┤ Suunta filters the Bearing
+Domain          -> Bearing    (desired targets)                 ┘   -> Course (residual Corrections, each with a Sigil)
 ```
 
 The core never sees raw reality or the in-flight `Correction`s themselves — only the
@@ -36,8 +36,9 @@ domain's verdicts about them. The promise is not "a planner with batteries". It 
 clean, pure place to attach:
 
 - domain-supplied semantic identity (`Sigil`)
-- domain-supplied relevance (a coverage verdict)
-- domain-supplied settlement predicates
+- domain-supplied satisfaction and relevance judgments, normalized into the
+  finite planning effects Suunta consumes
+- domain-owned settlement decisions, made downstream
 - downstream durability, gating, and compensation — consumer concerns, not Suunta
 
 ### Nouns, verbs, and inward-pointing governance
@@ -46,7 +47,8 @@ Suunta's users are **composition-driven**: they assemble freely-decoupled blocks
 they do not drive Suunta's shape by coupling to it. The division of labour is fixed:
 
 - Suunta owns the **nouns** — the vocabulary of exchange (`Sounding`, `Fix`, `Bearing`,
-  `Course`, `Correction`, `Sigil`, `Drift`) and the residual mechanism that relates them.
+  `Course`, `Correction`, `Sigil`, `Drift`), the normalized effects that mechanism
+  consumes, and the residual algebra that relates them.
 - The consumer owns the **verbs** — judgment, execution, and driving the loop.
 
 Suunta's governance teeth point **inward**: they constrain Suunta's own purity
@@ -81,7 +83,9 @@ The behavior that must be protected first:
 - **No semantic judgment in the core — the semantic bill of purity**: a sans-I/O
   pure core cannot decide semantic identity, whether a target is satisfied, relevance,
   or whether an obligation is settled. These four judgments are domain-supplied; the
-  core only filters the residual and records. (Satisfaction — whether reality meets a
+  core owns only the finite normalized effects required to filter and record the
+  residual. Owning an effect's mechanical contribution does not decide whether that
+  effect is true. (Satisfaction — whether reality meets a
   desired `Bearing` target — is the fourth face, surfaced when the residual computation
   was built: comparing reality against desired is a meaning comparison the pure core
   cannot make, so the domain certifies it and that per-target verdict is the `Fix`.) An
