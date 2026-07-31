@@ -62,6 +62,10 @@ sibling product.
 - `BACKLOG.md` records deferred decisions, open design questions, and candidate
   patterns, not mandatory phases.
 - `AGENTS.md` is operating protocol for agents and contributors.
+- `AGENTS.suunta-law.md` is a generated, non-authoritative projection of the
+  accepted Rust constitution for human and agent context. The constitution source
+  remains authoritative; regenerate the projection through its documented command
+  and never edit it by hand.
 
 Decision provenance lives in git — the commit body and pull request that made a
 change record its rationale. Forward-looking or reversed decisions are noted in
@@ -127,6 +131,11 @@ Suunta separates the *judgment* from the *check on its projection*.
   Tianheng (structure, dependencies, source scans), `rustc` (type facts — e.g.
   `Correction<Body>` carries no bound), and tests (`Residual::is_converged`, the
   composition proof). They bite the projection, never the judgment itself.
+
+Tianheng's accepted Rust constitution also projects into
+`AGENTS.suunta-law.md`. A freshness test byte-checks that generated context against
+the live declaration; this makes accepted law visible without creating a second
+hand-maintained authority.
 
 This explains the honest limits: "the core makes no semantic judgment" stays prose
 because it *casts no structural shadow*; the sans-I/O scan is partial because the shadow

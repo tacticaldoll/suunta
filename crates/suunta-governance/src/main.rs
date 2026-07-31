@@ -16,10 +16,9 @@ use std::{
 use tianheng::prelude::*;
 
 const CONTRACT_REASON: &str = "suunta-contract is the isolated planning core. At this shape it depends on nothing, and must never depend on another workspace crate or a runtime framework: its residual computation is pure.";
-const GOVERNANCE_REASON: &str = "the governance gate must stay independent of the workspace graph it judges: it may depend only on governance-family tooling (tianheng and its guibiao coverage core), never on a workspace crate under judgment.";
+const GOVERNANCE_REASON: &str = "the governance gate must stay independent of the workspace graph it judges: it may depend only on Tianheng's composed adopter surface, never on an individual governance instrument or a workspace crate under judgment.";
+const CORE_PURITY_REASON: &str = "suunta-contract is the sans-I/O planning core: it reads no ambient clock and exposes no async function; time and asynchronous driving live at the runtime edge.";
 const CORE_NO_IO_REASON: &str = "the sans-I/O planning core performs no I/O: no code in suunta-contract may call into std::io/fs/net/process; I/O lives in a runtime outside the core. Coverage is partial by nature (I/O entry points cannot be enumerated, and macro-expanded I/O such as println! is invisible to a source scan), so this tooth complements review rather than replacing it.";
-const AMBIENT_TIME_REASON: &str = "the planning core must read no ambient clock; time is injected at the runtime edge, never read inside suunta-contract.";
-const CORE_ASYNC_REASON: &str = "the sans-I/O planning core must stay runtime-agnostic: its public API must never expose an async fn, so no runtime shape leaks into the contract.";
 const FACADE_REASON: &str = "suunta is the curated published entrypoint. It may depend only on suunta-contract, never on a backend, runtime, or external framework.";
 const FACADE_REEXPORT_REASON: &str =
     "the suunta facade must stay a pure re-export entrypoint and hold no logic of its own";
@@ -69,7 +68,7 @@ fn constitution() -> Constitution {
         )
         .boundary(
             CrateBoundary::crate_("suunta-governance")
-                .restrict_dependencies_to(["tianheng", "guibiao"])
+                .restrict_dependencies_to(["tianheng"])
                 .because(GOVERNANCE_REASON),
         )
         .boundary(
@@ -77,12 +76,11 @@ fn constitution() -> Constitution {
                 .restrict_dependencies_to(["suunta-contract"])
                 .because(FACADE_REASON),
         )
-        .boundary(
-            ModuleBoundary::in_crate("suunta-contract")
+        .sans_io_pure(
+            SansIoPure::in_crate("suunta-contract")
                 .module("crate")
-                .must_not_call_inline("std::time")
-                .ending_with(["now"])
-                .because(AMBIENT_TIME_REASON),
+                .reading_clock_via("std::time", ["now"])
+                .because(CORE_PURITY_REASON),
         )
         .boundary(
             ModuleBoundary::in_crate("suunta-contract")
@@ -107,13 +105,6 @@ fn constitution() -> Constitution {
                 .module("crate")
                 .must_not_call_inline("std::process")
                 .because(CORE_NO_IO_REASON),
-        )
-        .async_exposure_boundary(
-            AsyncExposureBoundary::in_crate("suunta-contract")
-                .module("crate")
-                .must_not_expose_async_fn()
-                .including_submodules()
-                .because(CORE_ASYNC_REASON),
         )
 }
 
@@ -338,14 +329,24 @@ fn collect_rs_files(dir: &Path) -> Vec<PathBuf> {
 mod tests {
     use super::*;
 
+    const LAW_PROJECTION_PREAMBLE: &str = "\
+# Suunta Tianheng Law Projection
+
+This file is generated from `constitution()` in `crates/suunta-governance/src/main.rs`.
+The Rust declaration is authoritative; do not edit the projection by hand.
+Regenerate it with `BLESS=1 cargo test -p suunta-governance law_projection_is_fresh`.
+
+";
+    const LAW_PROJECTION_REGEN: &str =
+        "BLESS=1 cargo test -p suunta-governance law_projection_is_fresh";
+
     #[test]
     fn current_workspace_satisfies_constitution() {
-        let manifest = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../Cargo.toml");
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
 
-        assert_eq!(
-            check(constitution().static_boundaries(), &manifest),
-            Outcome::Clean
-        );
+        GovernanceTest::for_constitution(constitution())
+            .with_manifest_dir(root)
+            .assert_clean();
     }
 
     #[test]
@@ -377,11 +378,82 @@ tokio = { path = "../tokio" }
             panic!("expected an unapproved dependency violation, got {outcome:?}");
         };
         assert!(report.violations.iter().any(|violation| {
-            let id = violation.id();
-            id.target == "suunta-contract"
-                && id.rule == "restrict dependencies to"
-                && id.finding == "tokio"
+            violation.target() == "suunta-contract"
+                && violation.rule == "restrict dependencies to"
+                && violation.finding == "tokio"
         }));
+    }
+
+    #[test]
+    fn governance_dependency_tightening_rejects_guibiao_and_keeps_tianheng() {
+        let violating = TempWorkspace::new("suunta-governance-instrument-dependency");
+        violating.write_package("tianheng", "");
+        violating.write_package("guibiao", "");
+        violating.write_package("suunta-contract", "");
+        violating.write_package(
+            "suunta-governance",
+            r#"
+[dependencies]
+tianheng = { path = "../tianheng" }
+guibiao = { path = "../guibiao" }
+"#,
+        );
+        violating.write_facade();
+        violating.write_root_manifest_members(&[
+            "suunta",
+            "suunta-contract",
+            "suunta-governance",
+            "tianheng",
+            "guibiao",
+        ]);
+
+        let outcome = check(
+            constitution().static_boundaries(),
+            &violating.path.join("Cargo.toml"),
+        );
+        let Outcome::Violations(report) = outcome else {
+            panic!("expected the direct guibiao dependency to violate, got {outcome:?}");
+        };
+        assert!(
+            report.violations.iter().any(|violation| {
+                violation.target() == "suunta-governance"
+                    && violation.rule_key().rule_type()
+                        == "tianheng.rule/guibiao/restrict-dependencies-to"
+                    && violation
+                        .fact()
+                        .fields()
+                        .any(|(name, value)| name == "package" && value == "guibiao")
+                    && violation.severity == Severity::Enforce
+            }),
+            "expected an enforced structured guibiao dependency finding: {report:?}"
+        );
+
+        let allowed = TempWorkspace::new("suunta-governance-composed-dependency");
+        allowed.write_package("tianheng", "");
+        allowed.write_package("suunta-contract", "");
+        allowed.write_package(
+            "suunta-governance",
+            r#"
+[dependencies]
+tianheng = { path = "../tianheng" }
+"#,
+        );
+        allowed.write_facade();
+        allowed.write_root_manifest_members(&[
+            "suunta",
+            "suunta-contract",
+            "suunta-governance",
+            "tianheng",
+        ]);
+
+        assert_eq!(
+            check(
+                constitution().static_boundaries(),
+                &allowed.path.join("Cargo.toml"),
+            ),
+            Outcome::Clean,
+            "the adjacent tianheng-only dependency must remain allowed"
+        );
     }
 
     #[test]
@@ -417,10 +489,9 @@ tokio = { path = "../tokio" }
         };
         assert!(
             report.violations.iter().any(|violation| {
-                let id = violation.id();
-                id.target == "suunta"
-                    && id.rule == "restrict dependencies to"
-                    && id.finding == "tokio"
+                violation.target() == "suunta"
+                    && violation.rule == "restrict dependencies to"
+                    && violation.finding == "tokio"
             }),
             "expected the facade dependency boundary to fire: {report:?}"
         );
@@ -451,8 +522,8 @@ tokio = { path = "../tokio" }
         };
         assert!(
             report.violations.iter().any(|violation| {
-                let id = violation.id();
-                id.target == "std::fs" && id.rule == "inline symbol path confined to module"
+                violation.target() == "std::fs"
+                    && violation.rule == "inline symbol path confined to module"
             }),
             "expected the core no-I/O boundary to fire: {report:?}"
         );
@@ -483,8 +554,8 @@ tokio = { path = "../tokio" }
         };
         assert!(
             report.violations.iter().any(|violation| {
-                let id = violation.id();
-                id.target == "std::time" && id.rule == "inline symbol path confined to module"
+                violation.target() == "std::time"
+                    && violation.rule == "inline symbol path confined to module"
             }),
             "expected the core ambient-clock boundary to fire: {report:?}"
         );
@@ -576,21 +647,60 @@ pub use suunta_contract::{
 
     #[test]
     fn every_workspace_crate_is_covered() {
-        // Tianheng coverage is advisory and never fails CI, so assert completeness here
-        // through the native projection. `check_and_cover` takes the static (guibiao)
-        // constitution and reads real `cargo metadata`.
-        let manifest = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../Cargo.toml");
-        let (_outcome, coverage) =
-            guibiao::check_and_cover(constitution().static_boundaries(), &manifest);
-        let coverage = coverage.expect("workspace metadata should be readable in-repo");
-        assert!(
-            coverage.total > 0,
-            "coverage read no crates — the gate would pass vacuously"
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+
+        GovernanceTest::for_constitution(constitution())
+            .with_manifest_dir(root)
+            .assert_all_workspace_members_covered();
+    }
+
+    #[test]
+    fn law_projection_is_fresh() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let projection = format!(
+            "{LAW_PROJECTION_PREAMBLE}{}",
+            tianheng::constitution_markdown(&constitution())
         );
-        assert!(
-            coverage.uncovered.is_empty(),
-            "every workspace crate must have a dependency boundary; ungoverned: {:?}",
-            coverage.uncovered
+        let bless =
+            env::var("BLESS").is_ok_and(|value| value == "1" || value.eq_ignore_ascii_case("true"));
+
+        tianheng::projection_gate(
+            &projection,
+            &root.join("AGENTS.suunta-law.md"),
+            LAW_PROJECTION_REGEN,
+            bless,
+        )
+        .expect("the checked-in Tianheng law projection must match the live constitution");
+    }
+
+    #[test]
+    fn sans_io_profile_matches_the_reviewed_hand_composition() {
+        let hand_composed = Constitution::new("suunta-purity-proof")
+            .boundary(
+                ModuleBoundary::in_crate("suunta-contract")
+                    .module("crate")
+                    .must_not_call_inline("std::time")
+                    .ending_with(["now"])
+                    .because(CORE_PURITY_REASON),
+            )
+            .async_exposure_boundary(
+                AsyncExposureBoundary::in_crate("suunta-contract")
+                    .module("crate")
+                    .must_not_expose_async_fn()
+                    .including_submodules()
+                    .because(CORE_PURITY_REASON),
+            );
+        let via_profile = Constitution::new("suunta-purity-proof").sans_io_pure(
+            SansIoPure::in_crate("suunta-contract")
+                .module("crate")
+                .reading_clock_via("std::time", ["now"])
+                .because(CORE_PURITY_REASON),
+        );
+
+        assert_eq!(
+            tianheng::constitution_markdown(&via_profile),
+            tianheng::constitution_markdown(&hand_composed),
+            "SansIoPure must expand to the reviewed clock and async boundaries exactly"
         );
     }
 
@@ -606,8 +716,7 @@ pub use suunta_contract::{
         };
         assert!(
             report.violations.iter().any(|violation| {
-                let id = violation.id();
-                id.target == "crate" && id.rule == "must not expose async fn"
+                violation.target() == "crate" && violation.rule == "must not expose async fn"
             }),
             "expected the core async-exposure boundary to fire: {report:?}"
         );
@@ -626,10 +735,10 @@ pub use suunta_contract::{
             panic!("expected a submodule async-exposure violation, got {outcome:?}");
         };
         assert!(
-            report.violations.iter().any(|violation| {
-                let id = violation.id();
-                id.rule == "must not expose async fn"
-            }),
+            report
+                .violations
+                .iter()
+                .any(|violation| { violation.rule == "must not expose async fn" }),
             "expected the async-exposure boundary to fire inside a submodule: {report:?}"
         );
     }
