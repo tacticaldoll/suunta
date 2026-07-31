@@ -26,15 +26,16 @@ boundary or the coverage gate fails.
 
 ## Design Decisions (this shape)
 
-- **Residual model.** A `Course` is `Bearing` diffed against `Fix` unioned with the
-  *relevant* in-flight `Correction`s — not a raw union, and not a semantic comparison
-  the core performs. Relevance is a domain-supplied coverage verdict.
+- **Residual model.** A `Course` is the `Bearing` filtered to the targets the domain's
+  `Fix` (a satisfaction verdict per target) has not certified satisfied and coverage has
+  not certified covered — not a diff the core performs over reality, and not a semantic
+  comparison. Both satisfaction and relevance are domain-supplied verdicts.
 - **The semantic bill of purity.** A sans-I/O pure core cannot make semantic
   judgments, so it outsources four to the domain: **semantic identity** (`Sigil`),
   **target satisfaction** (whether reality meets a `Bearing` target), **relevance**
   (coverage verdict), and **settlement predicate**. These are one purity choice with
   four faces — satisfaction was added when the planner landed, specifically so the core
-  never compares an observed `Fix` against a desired `Bearing` itself. The cost — an
+  never compares reality against a desired `Bearing` itself. The cost — an
   undetected domain semantic error fails silently — is accepted deliberately, not
   patched by pulling judgment into the core.
 - **Sigil stability is a domain contract.** Each `Correction` carries a

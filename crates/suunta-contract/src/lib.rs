@@ -1,15 +1,17 @@
 //! The isolated core contract for Suunta: sans-I/O convergence planning.
 //!
-//! Suunta computes the residual `Course` — the corrections needed to converge a
-//! `Fix` (observed state) toward a `Bearing` (desired state) — and nothing more.
+//! Suunta computes the residual `Course` — the corrections that remain of a desired
+//! `Bearing` once the domain's certified satisfaction (the `Fix`) and coverage verdicts
+//! are applied — and nothing more. It consumes the domain's verdicts, not raw reality.
 //!
 //! # Axioms
 //!
 //! 1. **No semantic judgment in the core.** Semantic identity ([`Sigil`]), target
 //!    satisfaction, relevance (a domain coverage verdict), and settlement predicates
 //!    are domain-supplied. The core computes the residual and records; it never
-//!    compares meanings — in particular it never decides whether an observed `Fix`
-//!    meets a desired `Bearing`. This is the *semantic bill of purity* (four faces of
+//!    compares meanings — in particular it never decides whether reality meets a
+//!    desired `Bearing` (that verdict is the domain's `Fix`). This is the *semantic bill
+//!    of purity* (four faces of
 //!    one purity choice): its cost (a silent failure on a domain semantic error) is
 //!    accepted deliberately rather than patched by pulling judgment into the core.
 //! 2. **Sans-I/O purity.** The core exposes no `async fn`, reads no ambient clock,
@@ -115,7 +117,7 @@ impl<Body> Correction<Body> {
     }
 }
 
-/// The residual plan: the ordered [`Correction`]s that steer a `Fix` toward a `Bearing`.
+/// The residual plan: the ordered [`Correction`]s that remain to steer toward a `Bearing`.
 ///
 /// A `Course` is the residual *as a value* — the collection the core emits. It preserves
 /// the order it is built from and never deduplicates or reorders its `Correction`s, since
