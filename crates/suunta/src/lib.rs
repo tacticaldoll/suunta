@@ -81,8 +81,9 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
-pub use suunta_contract::{
-    Bearing, Correction, Course, CoverageEffect, CoverageFinding, Fix, InFlightIndex, Residual,
-    Reversibility, Satisfaction, SatisfactionFinding, Sigil, Sounding, SurfacedFinding,
-    plan_residual,
-};
+// A glob re-export makes "the facade withholds nothing" structurally true: the facade's
+// surface *is* `suunta-contract`'s public surface, enforced by the compiler in both
+// directions. A new public item in the core appears here automatically; none can be
+// silently dropped or left behind. This is the faithful projection of "re-export in
+// full" — see `AGENTS.md` ("Governance and Conformance") and the `public-facade` spec.
+pub use suunta_contract::*;
