@@ -605,6 +605,27 @@ mod tests {
     }
 
     #[test]
+    fn disjoint_neither_covers_a_target_nor_surfaces() {
+        // Coverage law: Disjoint is a positive "unrelated" verdict. It excludes an
+        // in-flight instance from coverage without covering any Bearing target and
+        // without surfacing anything. A known-unsatisfied target is retained (not
+        // surfaced), so the residual isolates the Disjoint finding's (non-)effect.
+        let bearing = Bearing::new(vec![corr("a", 1)]);
+        let coverage = vec![CoverageFinding {
+            inflight: InFlightIndex(0),
+            effect: CoverageEffect::Disjoint,
+        }];
+        let residual = plan_residual(
+            bearing,
+            &sounding(vec![sat("a", Satisfaction::Unsatisfied)], coverage),
+        );
+        // Disjoint did not cover the target -> it is retained.
+        assert_eq!(retained_sigils(&residual), ["a"]);
+        // Disjoint surfaces nothing, and a known-unsatisfied target is not an alarm.
+        assert!(residual.surfaced.is_empty());
+    }
+
+    #[test]
     fn equal_sigil_targets_are_not_deduplicated() {
         let bearing = Bearing::new(vec![corr("same", 1), corr("same", 2)]);
         let residual = plan_residual(bearing, &sounding(vec![], vec![]));
