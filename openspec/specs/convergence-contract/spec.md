@@ -1,7 +1,7 @@
 # convergence-contract Specification
 
 ## Purpose
-TBD - created by archiving change establish-suunta-shape. Update Purpose after archive.
+Define Suunta's convergence-planning contract: the navigation vocabulary; the residual `Course` that `plan_residual` computes from a `Bearing` and domain-certified satisfaction and coverage findings (omitting only positively-certified targets, surfacing uncertainty); the semantic bill of purity in four faces; stable-`Sigil` identity; opaque `Correction` payloads; One-Way marking; sans-I/O purity; and dependency isolation.
 ## Requirements
 ### Requirement: Navigation Vocabulary
 Suunta SHALL name the convergence-planning roles with a fixed navigation register:
@@ -19,9 +19,8 @@ A `Course` SHALL represent the residual needed to converge a `Fix` toward a `Bea
 the `Correction`s that remain once the relevant in-flight `Correction`s are accounted
 for. Relevance SHALL be a domain-supplied coverage verdict, not a comparison the core
 performs, and the residual SHALL NOT be a raw set union. This requirement defines the
-residual *contract*; the computation that forms a `Course` is realized in a later
-spec-driven change (see `BACKLOG.md`), so at this shape the constraint binds the
-design rather than describing a shipped algorithm.
+residual *contract*; the computation that forms a `Course` is realized by the
+requirement "The Residual Omits Only Positively-Certified Targets".
 
 #### Scenario: Relevance is a domain-supplied verdict
 - **WHEN** a `Course` is formed from a `Bearing`, a `Fix`, and in-flight `Correction`s
@@ -33,7 +32,8 @@ A `Course` SHALL be a public, sans-I/O value type (`Course<Body>`) that holds an
 producer. The core SHALL NOT deduplicate, reorder, or otherwise reinterpret the
 collection, since doing so would be a semantic act the core does not perform. This
 requirement defines the `Course` *value*; the requirement that a `Course` is *computed*
-as a residual (see "A Course Is A Residual") is realized by a later change.
+as a residual (see "A Course Is A Residual") is realized by "The Residual Omits Only
+Positively-Certified Targets".
 
 #### Scenario: Order is preserved
 - **WHEN** a `Course` is formed from a sequence of `Correction`s

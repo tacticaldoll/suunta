@@ -1,7 +1,7 @@
 # quality-governance Specification
 
 ## Purpose
-TBD - created by archiving change establish-suunta-shape. Update Purpose after archive.
+Define Suunta's executable governance: the Tianheng constitution's dependency boundaries and sans-I/O teeth, workspace coverage, active-prose presence, the honest limit that "no semantic judgment" is not statically enforceable, and the single-sourced Definition of Done.
 ## Requirements
 ### Requirement: Executable Constitution
 Suunta SHALL enforce its architecture with an executable Tianheng constitution
