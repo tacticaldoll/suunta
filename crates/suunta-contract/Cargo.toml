@@ -1,0 +1,12 @@
+[package]
+name = "suunta-contract"
+description = "The isolated core contract for Suunta: sans-I/O convergence planning."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+publish.workspace = true
+
+[dependencies]

@@ -1,71 +1,106 @@
 # AGENTS.md
 
-Meta-guideline for any AI coding agent working in this repository. Read this
-first.
+Meta-guideline for AI coding agents working in this repository. Read this first,
+then let `openspec/specs/` and active change specs be the source of durable
+architecture truth.
 
-## This Project Uses OpenSpec
+## Suunta In One Sentence
 
-The source of truth lives in `openspec/`, which is version-controlled and
-agent-agnostic.
+Suunta is a thin, sans-I/O convergence-planning core: given a desired `Bearing`
+and an observed `Fix`, it computes the residual `Course` (the `Correction`s needed
+to converge) while making no semantic judgment of its own.
 
-- `openspec/specs/` - the living specification of what the system currently is.
-- `openspec/changes/` - active change proposals as delta specs.
-- `openspec/changes/archive/` - completed changes.
+This repository is intentionally narrow. Suunta is not a workflow engine, a
+scheduler, or a durable-execution runtime. Durability, gating, and compensation are
+downstream consumer concerns, not the identity of the core.
 
-Per-agent command files such as `.codex/`, `.claude/`, and editor-specific shims
-are per-clone generated files and are not committed. After cloning, generate
-your own with:
+## Architectural Axioms
 
-```bash
-openspec init --tools codex
-# or: openspec init --tools claude,cursor,github-copilot
-```
+Before proposing or writing code, protect these axioms:
 
-## Workflow
+1. **Planning core stays thin**: `suunta-contract` owns the residual computation
+   and the `Course`/`Correction` vocabulary. It does not own execution, durability,
+   scheduling, gating, or compensation.
+2. **No semantic judgment in the core**: semantic identity (`Sigil`), relevance (a
+   coverage verdict), and settlement predicates are domain-supplied. The core
+   computes the residual and records; it never compares meanings. This is the
+   *semantic bill of purity* — its cost (silent failure on domain semantic error)
+   is accepted deliberately, not patched by pulling judgment into the core.
+3. **Sans-I/O purity**: the core exposes no `async fn`, reads no ambient clock, and
+   performs no I/O. A runtime drives it and injects time at the edge.
+4. **Vocabulary is governance**: names such as `Sounding`, `Fix`, `Bearing`,
+   `Course`, `Correction`, `Sigil`, and `Drift` protect the navigation worldview.
 
-Follow this lifecycle:
+## Lineage
 
 ```text
-explore -> propose -> apply -> sync -> archive
+   tianheng  +  〔sans-I/O · OpenSpec · vocabulary-as-governance · least-commitment〕
+                    │  inherited discipline — provenance, not coupling
+                    ▼
+             ●  suunta
+
+   siblings: ▢ ▢ ▢   intentionally blank — this repo is sibling-blind. Which
+                     products compose together is a consumer app's knowledge, never
+                     a component's; naming a sibling here would leak that knowledge
+                     and rot when the roster changes.
+   note: skeleton copied from the pacta reference implementation.
 ```
 
-1. **Explore**: think and investigate only. Do not write feature code outside of
-   a change.
-2. **Propose**: create a change with `proposal.md`, `design.md`, `tasks.md`, and
-   delta specs.
-3. **Apply**: implement tasks one at a time, checking each off in `tasks.md`
-   only after verification.
-4. **Sync**: merge verified delta specs back into `openspec/specs/`.
-5. **Archive**: move the completed change to
-   `openspec/changes/archive/YYYY-MM-DD-<name>/`.
+Suunta shares a **discipline** with its lineage, not code: its own crates, specs,
+constitution, and release cadence. It does not import, track, or depend on any
+sibling product.
 
-## OpenSpec CLI
+## Document Authority
 
-If your agent has no OpenSpec slash commands, use the CLI:
+- `openspec/specs/` is shipped architecture truth.
+- `openspec/changes/` contains active proposed truth until it is synced.
+- `PROJECT.md` states product vision, positioning, and non-goals.
+- `docs/domain-language.md` is the canonical vocabulary.
+- `BACKLOG.md` records deferred decisions, open design questions, and candidate
+  patterns, not mandatory phases.
+- `AGENTS.md` is operating protocol for agents and contributors.
 
-```bash
-openspec list [--json] [--specs]
-openspec new change "<name>"
-openspec status --change "<name>" --json
-openspec instructions <artifact> --change "<name>"
-openspec archive <name>
+Decision provenance lives in git — the commit body and pull request that made a
+change record its rationale. Forward-looking or reversed decisions are noted in
+`BACKLOG.md`. There is no separate architecture-decision-record file class; the
+living documents above are the single source of truth for current state, and git is
+the source of truth for why it changed.
+
+If these documents conflict, fix the conflict through an OpenSpec change before
+implementing feature code.
+
+## Adversarial Review Stance
+
+Every change passes an adversarial review at BOTH the propose and apply phases
+before it is committed. Actively challenge the design:
+
+- **Propose phase**: Does the change make the planning core heavier than the
+  residual mechanism requires? Does it smuggle a semantic judgment (identity,
+  relevance, settlement) into the core instead of the domain? Does it treat a
+  downstream concern (durability, gating, execution, compensation) as core identity?
+- **Apply phase**: Does the implementation leak I/O, async, an ambient clock, or a
+  semantic comparison into the core? Does Tianheng still bite the boundary that the
+  prose claims?
+
+Reject or redesign changes that pull Suunta toward an orchestration monolith.
+
+## OpenSpec Workflow
+
+This repository uses OpenSpec. The lifecycle is:
+
+```text
+explore -> propose -> apply -> sync
 ```
 
-## Rules
-
-- Before implementing anything, read the relevant files in `openspec/specs/` and
-  the active change's artifacts.
-- Do not write feature code without an active change proposal that contains
-  tasks.
-- Keep changes minimal and scoped to the task being implemented.
-- Treat `openspec/specs/` as the truth. Reflect requirement changes there via
-  the sync step, not by editing code silently.
-- Keep project-specific contract, terms, and priorities in `PROJECT.md`.
-
-## Language
-
-- Write OpenSpec artifacts, ADRs, code comments, and commit messages in English.
-- Converse with users in the language they use.
+1. **Explore**: investigate and shape intent. Do not write feature code outside a
+   change.
+2. **Propose**: create `proposal.md`, `design.md`, `tasks.md`, and delta specs.
+   Commit as `docs(<change>): propose <summary>`.
+3. **Apply**: implement against the active delta specs. Check off tasks only after
+   verification. Commit coherent compiling milestones as `feat(...)` or `fix(...)`.
+4. **Sync**: merge verified delta specs into `openspec/specs/` (agent-driven), then
+   remove the completed change directory; its content now lives in `openspec/specs/`
+   and git history. There is no archive. Commit as `docs(specs): sync <change>`.
 
 ## Commit And Integration Governance
 
@@ -109,18 +144,22 @@ openspec archive <name>
 
 ## Definition Of Done
 
-Run these from the workspace root before checking off a task, syncing specs, or
-archiving a change:
+Run these from the workspace root before checking off implementation tasks or
+syncing specs. This is the single source for the gate list — `README.md` and
+`docs/development-flow.md` point here rather than restating it.
 
 ```bash
-cargo build
-cargo test
-cargo clippy --all-targets -- -D warnings
+cargo build --workspace
+cargo test --workspace
+cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --all --check
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
+cargo deny check
+cargo run -p suunta-governance -- check --manifest-path Cargo.toml
 ```
 
-Before the first real crate exists, these Rust commands are not yet meaningful.
-The first project-specific OpenSpec change should add the real crate layout and
-make the Definition of Done runnable from the workspace root.
-
-If a command cannot run in the current environment, report that explicitly.
+CI runs the same gates on push and pull request, and additionally verifies the
+declared MSRV builds (`cargo +1.88 build --workspace`). Rust style lives in these
+checks: rustfmt formats, clippy denies warnings, rustdoc denies documentation
+warnings, cargo-deny owns resolved supply-chain policy, and `suunta-governance` owns
+Tianheng architecture boundaries.
