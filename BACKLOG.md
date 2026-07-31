@@ -80,7 +80,10 @@ user. Consumption may freeze provisionally; production waits for the consumer.
     `unknown` — retained, never treated as ignorable.** `Independent`/ignorable is a
     positively-certified verdict, never derived from absence (the seam's false-negative
     bound). The class *names/taxonomy* — whether exactly four, supersession
-    directionality, pairwise vs. aggregate — are NOT frozen.
+    directionality, pairwise vs. aggregate — are NOT frozen. **Update (normative):** the
+    instance-reference law and the positive-certification / false-negative-bound law are
+    now requirements in `convergence-contract` ("Coverage Findings Are Instance-Referenced
+    And Positively Certified"); only the *production* side below remains open.
   - *Production (waits for the consumer):* how the domain computes, keys, indexes,
     batches, or caches findings; any `may_overlap`/candidate mechanism; any
     user-implemented judgment trait. Never frozen ahead of a real consumer.

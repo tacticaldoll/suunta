@@ -98,6 +98,29 @@ state; disposition is a downstream/consumer concern.
 - **WHEN** a coverage finding marks an in-flight `Correction` superseded or conflicting
 - **THEN** the planner surfaces it on the output and takes no cancelling or compensating action
 
+### Requirement: Coverage Findings Are Instance-Referenced And Positively Certified
+A coverage finding SHALL reference a specific in-flight `Correction` **instance** by
+position (`InFlightIndex`), never by `Sigil`, because a `Course` does not deduplicate and
+two in-flight `Correction`s may share a `Sigil`. The domain's relevance verdict SHALL be
+positively certified per referenced instance: the **absence** of a finding for an
+in-flight instance SHALL mean *unknown* — the core forms no relevance verdict about it and
+it SHALL NOT be treated as ignorable. Ignorability SHALL be a positive certification
+(a `Disjoint` finding), never derived from absence (the seam's false-negative bound). This
+requirement SHALL NOT fix the coverage-effect taxonomy — the number of effects, their
+names, supersession directionality, and pairwise-vs-aggregate scope remain open.
+
+#### Scenario: Findings reference instances, not sigils
+- **WHEN** two in-flight `Correction`s share a `Sigil` and the domain reports a coverage finding about one of them
+- **THEN** the finding identifies that instance by its `InFlightIndex`, and the other instance is unaffected
+
+#### Scenario: Ignorability is positively certified, not inferred from absence
+- **WHEN** an in-flight instance has no coverage finding
+- **THEN** the core forms no coverage verdict about it and never treats it as ignorable; only a positive `Disjoint` finding certifies ignorability
+
+#### Scenario: A Disjoint finding excludes from coverage without surfacing
+- **WHEN** a coverage finding certifies an in-flight instance `Disjoint`
+- **THEN** the instance is excluded from coverage and nothing is surfaced for it — it neither covers a `Bearing` target nor is flagged
+
 ### Requirement: The Planner Is Functional Per Cycle
 `plan_residual` SHALL be a pure function of a single cycle's inputs — a `Bearing` and a
 `Sounding` (one cycle's certified readings: a `Fix` and coverage findings) — and SHALL
