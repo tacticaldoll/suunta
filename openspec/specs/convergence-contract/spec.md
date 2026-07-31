@@ -5,14 +5,20 @@ Define Suunta's convergence-planning contract: the navigation vocabulary; the re
 ## Requirements
 ### Requirement: Navigation Vocabulary
 Suunta SHALL name the convergence-planning roles with a fixed navigation register:
-`Sounding` (one observation cycle), `Fix` (the observed current state), `Bearing`
-(the domain-supplied desired state), `Drift` (the divergence between them), `Course`
-(the residual plan), `Correction` (a single planned change), and `Sigil` (a
-domain-supplied stable semantic identity). These terms are architecture, not branding.
+`Sounding` (one convergence cycle's certified readings), `Fix` (the domain's certified
+satisfaction of the `Bearing`'s targets), `Bearing` (the domain-supplied desired state),
+`Drift` (the divergence between them), `Course` (the residual plan), `Correction` (a
+single planned change), and `Sigil` (a domain-supplied stable semantic identity). These
+terms are architecture, not branding. `Sounding` and `Fix` SHALL be realized as types in
+`suunta-contract`, not left as prose-only roles.
 
 #### Scenario: The vocabulary is canonical
 - **WHEN** documentation or the contract crate refers to a convergence-planning role
 - **THEN** it uses the canonical navigation term rather than a generic synonym
+
+#### Scenario: Sounding and Fix are realized as types
+- **WHEN** `suunta-contract`'s public API is compiled
+- **THEN** it exposes a `Fix` type and a `Sounding` type, so the two roles are named in the type system, not only in prose
 
 ### Requirement: A Course Is A Residual
 A `Course` SHALL represent the residual needed to converge a `Fix` toward a `Bearing`:
@@ -60,11 +66,11 @@ Residual".
 - **THEN** the target is retained in the residual `Course`
 
 ### Requirement: Fix Is Domain-Certified Satisfaction, Not Observation
-`Fix` SHALL be expressed as domain-certified satisfaction findings — a `Satisfaction`
-verdict per referenced `Bearing` target — and SHALL NOT be a bare set of satisfied
-`Sigil`s nor a store of raw observations. Whether a target is satisfied is a domain
-judgment the core consumes; the core SHALL NOT read observation content or compute
-satisfaction itself.
+`Fix` SHALL be a named type in `suunta-contract` that aggregates domain-certified
+satisfaction findings — a `Satisfaction` verdict per referenced `Bearing` target
+(`SatisfactionFinding`) — and SHALL NOT be a bare set of satisfied `Sigil`s nor a store of
+raw observations. Whether a target is satisfied is a domain judgment the core consumes;
+the core SHALL NOT read observation content or compute satisfaction itself.
 
 #### Scenario: Satisfaction is consumed, not computed
 - **WHEN** the core needs to know whether a `Bearing` target is satisfied
@@ -73,6 +79,10 @@ satisfaction itself.
 #### Scenario: Fix carries verdicts, not observations
 - **WHEN** a `Fix` is supplied to the planner
 - **THEN** it carries per-target satisfaction verdicts, and the core reads no observation body
+
+#### Scenario: Fix is a named aggregate
+- **WHEN** a `Fix` is constructed
+- **THEN** it is a distinct type wrapping the cycle's `SatisfactionFinding`s, not a bare slice or set, and the per-target entry remains a `SatisfactionFinding`
 
 ### Requirement: Uncertainty And Disposition Are Surfaced, Not Resolved
 The planner SHALL surface, on its output, each target retained under `Unknown` and each
@@ -89,15 +99,21 @@ state; disposition is a downstream/consumer concern.
 - **THEN** the planner surfaces it on the output and takes no cancelling or compensating action
 
 ### Requirement: The Planner Is Functional Per Cycle
-`plan_residual` SHALL be a pure function of a single cycle's inputs — a `Bearing`,
-satisfaction findings, and coverage findings — and SHALL hold no state across `Sounding`s.
-The core consumes domain-certified findings *about* in-flight `Correction`s (coverage
-findings), never the raw in-flight corrections themselves; it injects no time and performs
-no I/O.
+`plan_residual` SHALL be a pure function of a single cycle's inputs — a `Bearing` and a
+`Sounding` (one cycle's certified readings: a `Fix` and coverage findings) — and SHALL
+hold no state across `Sounding`s. The core consumes domain-certified findings *about*
+in-flight `Correction`s (coverage findings, carried by the `Sounding`), never the raw
+in-flight corrections themselves; it injects no time and performs no I/O. The `Bearing`
+SHALL remain a separate argument — it is the persistent reference a `Sounding` is taken
+against, not part of the reading.
 
 #### Scenario: The planner holds no cross-cycle state
 - **WHEN** `plan_residual` is invoked
 - **THEN** it reads only its arguments, retains nothing between invocations, and reads no ambient clock and performs no I/O
+
+#### Scenario: The planner takes a Bearing and a Sounding
+- **WHEN** `plan_residual` is called for one cycle
+- **THEN** it takes the `Bearing` and that cycle's `Sounding`, and the `Sounding` supplies the `Fix` and the coverage findings
 
 ### Requirement: The Core Makes No Semantic Judgment
 The planning core SHALL make no semantic judgment. Semantic identity, **target
@@ -147,6 +163,24 @@ carrier; the domain owns the meaning.
 #### Scenario: A Correction still carries identity and reversibility
 - **WHEN** a `Correction` is constructed
 - **THEN** it carries a domain-supplied `Sigil` and a `Reversibility` marking, and the core treats the `Sigil` by value equality and the `Body` opaquely
+
+### Requirement: A Sounding Carries No Body
+A `Sounding` SHALL bundle one convergence cycle's certified readings — the `Fix` and the
+coverage findings — and SHALL carry no domain payload: it SHALL be a non-generic type that
+references targets and in-flight corrections only by `Sigil`/`InFlightIndex` and verdict.
+Because a `Sounding` has no `Body`, the core cannot read a payload from the readings; the
+domain payload SHALL flow only from `Bearing<Body>` into `Course<Body>`. This SHALL make
+body-freeness of the readings a governed invariant — a future change adding a payload to a
+reading violates this requirement — rather than the emergent, unstated property it is
+today (the per-target and coverage findings already carry no `Body`).
+
+#### Scenario: A Sounding exposes no payload
+- **WHEN** `suunta-contract`'s public API is compiled
+- **THEN** `Sounding` is non-generic and exposes no operation returning a domain `Body`; only `Bearing`, `Course`, and `Residual` carry `Body`
+
+#### Scenario: A Sounding bundles the cycle's readings
+- **WHEN** a `Sounding` is constructed for one cycle
+- **THEN** it holds that cycle's `Fix` and its coverage findings, and is fed together with the `Bearing` to `plan_residual`
 
 ### Requirement: One-Way Corrections Are Marked
 A `Correction` SHALL declare its reversibility, and a One-Way `Correction` SHALL be
