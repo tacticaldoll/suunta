@@ -21,8 +21,8 @@ judgment to the domain; it consumes the domain's verdicts, never reality itself.
 ## Status (0.1.0)
 
 0.1.0 ships the residual planner: `plan_residual` computes the residual `Course` from
-a `Bearing` and domain-supplied satisfaction and coverage findings, alongside the
-`Correction`/`Course`/`Sigil`/`Reversibility` vocabulary, the architectural axioms,
+a `Bearing` and a per-cycle `Sounding` (the domain's `Fix` and coverage findings),
+alongside the `Correction`/`Course`/`Sigil`/`Reversibility` vocabulary, the architectural axioms,
 and the executable governance. What is still deferred — the settlement predicate, the
 production-side coverage contract, and an async edge — is recorded in `BACKLOG.md`.
 
