@@ -41,3 +41,5 @@ types), the curated `suunta` facade, and executable Tianheng governance.
   compares meanings. Settlement decomposes into a mechanical read (the core's
   `is_converged`), a single-cycle disposition (the domain's), and cross-cycle termination
   (a driver's, deferred). See `BACKLOG.md`.
+
+[0.1.0]: https://github.com/tacticaldoll/suunta/releases/tag/v0.1.0

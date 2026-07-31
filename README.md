@@ -18,18 +18,18 @@ observed state" and "I do not want a workflow engine to own my domain's meaning.
 Suunta owns one mechanism — the residual filter — and outsources every semantic
 judgment to the domain; it consumes the domain's verdicts, never reality itself.
 
-## Status (0.1.0)
+## Scope
 
-0.1.0 ships the residual planner: `plan_residual` computes the residual `Course` from
-a `Bearing` and a per-cycle `Sounding` (the domain's `Fix` and coverage findings),
-alongside the `Correction`/`Course`/`Sigil`/`Reversibility` vocabulary, the architectural axioms,
-and the executable governance. What is still deferred — the settlement predicate, the
-production-side coverage contract, and an async edge — is recorded in `BACKLOG.md`.
+Suunta is a thin sans-I/O convergence-planning core, not a workflow engine. It owns one
+mechanism — the residual filter (`plan_residual`) — and the `Correction`/`Course`/`Sigil`/
+`Reversibility` vocabulary, its architectural axioms, and executable governance; every semantic
+judgment (identity, satisfaction, relevance, settlement) is the domain's to supply. It does
+**not** own settlement, a production-side coverage contract, or an async edge — those are the
+domain's or are deferred (see `BACKLOG.md`).
 
-Depend on the curated **facade** (`suunta`) — the recommended single entrypoint that
-re-exports the compose-level surface and carries a runnable convergence-loop doctest.
-The isolated core (`suunta-contract`) stays available for direct use, but `suunta` is
-the crate to depend on.
+Depend on the curated **facade** (`suunta`) — the recommended single entrypoint, which re-exports
+the compose-level surface and carries a runnable convergence-loop doctest; the isolated core
+(`suunta-contract`) stays available for direct use. See `CHANGELOG.md` for what each release adds.
 
 ## What Suunta owns, and what the domain supplies
 
