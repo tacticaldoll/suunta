@@ -244,6 +244,19 @@ Inherited discipline first, then this project's own resolved design decisions.
   inflight, findings)`; the shipped shape bundles the per-cycle `Fix` and coverage
   findings into a body-free `Sounding` and drops raw `inflight`). Settled by the
   residual-planner landing, not left open.
+- **`Drift` is a concept, not a type — resolved.** `Drift` stays a vocabulary term (the
+  `Bearing` targets a `Fix` has not certified satisfied), never a realized type. The
+  residual `Course`/`Residual` already embodies it; a `Drift` type would be redundant
+  ceremony against thinness. Vocabulary-as-governance argued to realize `Sounding`/`Fix`
+  because they closed a defined-but-unbuilt *mechanism* gap; `Drift` names no distinct
+  mechanism the `Course` does not already carry, so the same argument does not apply.
+- **Governance is judgment; conformance checks its projection.** Governance (judgment,
+  meaning) lives in prose and is review-governed; code is the judgment's structural
+  projection; conformance (Tianheng + `rustc` + tests) bites the projection, never the
+  judgment. A judgment becomes a Tianheng tooth only if it passes four gates — casts a
+  structural shadow, faithful (non-gameable) proxy, stable judgment, and worth the
+  `prose ⟷ tooth` sync cost. Otherwise its honest home is prose, review, or a test. See
+  `AGENTS.md` ("Governance and Conformance").
 
 ## Dispositions: Rejected, Placed Downstream, Deferred
 
@@ -265,9 +278,15 @@ no latent *verb*.
 - **Structural contradiction detection.** Comparing a `Sigil` against a content
   fingerprint to spot a drifted identity is itself a comparison the pure core does not
   make — a downstream identity-reconciliation consumer's, never here.
-- **A driver / loop / disposition / termination *trait* the user implements.** Giving
-  the seam a user-implemented behaviour rebuilds a Tower-style `Service`, the identity
-  Suunta is defined against. The seam stays values supplied to a pure function.
+- **Any surface that dictates the consumer's shape.** The refused monolith has more than
+  one face, and all are rejected: a *trait the consumer implements* (Tower `Service`); an
+  *engine that owns the run loop* it calls into (`.run()`); a *middleware stack* it must
+  layer into (Tower `Layer`); a *readiness/backpressure contract* baked into the API
+  (`poll_ready`). Each rebuilds a framework that drives the consumer's structure — the
+  identity Suunta is defined against. The seam stays values supplied to a pure function;
+  Suunta drives the consumer's *thinking* (its vocabulary), never its *shape*. The
+  sans-I/O and no-async teeth already make the I/O-bearing faces unbuildable; a pure
+  convenience loop or a shape-dictating sync API is the review-governed residue.
 
 ### Placed downstream — core stance settled, only a demonstration pending
 

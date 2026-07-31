@@ -51,10 +51,22 @@ they do not drive Suunta's shape by coupling to it. The division of labour is fi
 
 Suunta's governance teeth point **inward**: they constrain Suunta's own purity
 (sans-I/O, dependency isolation, facade re-export purity), never a consumer's design.
-This is the inverse of a framework like Tower, whose `Service` trait dictates the
-consumer's shape. Because the deliverable is a pattern, Suunta decides its own surface
-from this identity — it does not defer that decision to a consumer that does not yet
-exist.
+Because the deliverable is a pattern, Suunta decides its own surface from this identity —
+it does not defer that decision to a consumer that does not yet exist.
+
+Suunta refuses **any surface that dictates a consumer's shape** — the inverse of Tower.
+That refusal has more than one face, and all are rejected:
+
+- a **trait the consumer implements** (Tower's `Service`);
+- an **engine that owns the run loop** the consumer calls into (`.run()`);
+- a **middleware stack** the consumer must layer into (Tower's `Layer`);
+- a **readiness / backpressure contract** baked into the API (`poll_ready`).
+
+A design pattern *drives* its consumer by offering a vocabulary and a residual mechanism
+so clear they organize their thinking around it — never by owning their code shape. It
+drives their thinking, not their structure; adoption is voluntary. The moment a surface
+would make the consumer's structure Suunta's to dictate, it is the drift Suunta exists to
+refuse.
 
 ## Core Contract
 
