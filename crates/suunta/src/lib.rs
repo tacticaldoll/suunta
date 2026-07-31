@@ -5,8 +5,9 @@
 //!
 //! - the navigation vocabulary — [`Bearing`], [`Correction`], [`Course`],
 //!   [`Sigil`], [`Reversibility`];
-//! - the domain's verdicts — [`Satisfaction`], [`SatisfactionFinding`], [`Fix`],
-//!   [`CoverageEffect`], [`CoverageFinding`], [`InFlightIndex`];
+//! - the domain-supplied, normalized planning effects — [`Satisfaction`],
+//!   [`SatisfactionFinding`], [`Fix`], [`CoverageEffect`], [`CoverageFinding`],
+//!   [`InFlightIndex`];
 //! - one cycle's readings — [`Sounding`];
 //! - the residual output — [`Residual`], [`SurfacedFinding`] — and the planner
 //!   [`plan_residual`].

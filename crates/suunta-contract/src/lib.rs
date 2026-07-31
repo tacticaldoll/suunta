@@ -1,8 +1,9 @@
 //! The isolated core contract for Suunta: sans-I/O convergence planning.
 //!
 //! Suunta computes the residual `Course` — the corrections that remain of a desired
-//! `Bearing` once the domain's certified satisfaction (the `Fix`) and coverage verdicts
-//! are applied — and nothing more. It consumes the domain's verdicts, not raw reality.
+//! `Bearing` once the domain's certified satisfaction (the `Fix`) and normalized coverage
+//! effects are applied — and nothing more. It consumes domain-supplied effects, not raw
+//! reality.
 //!
 //! # Axioms
 //!
@@ -23,9 +24,9 @@
 //! The residual planner is landed: [`Correction`], [`Course`], [`Sigil`],
 //! [`Reversibility`], and [`plan_residual`], which computes the residual [`Course`]
 //! from a `Bearing` and a per-cycle [`Sounding`] (the [`Fix`] and coverage findings).
-//! Still deferred (see `BACKLOG.md`): the settlement predicate, the production-side
-//! coverage contract, and an async edge. Durability, gating, execution, and compensation of a
-//! correction are downstream consumer concerns, not this core.
+//! Settlement, coverage-effect production, an async edge, durability, gating, execution,
+//! and compensation are all settled downstream consumer concerns, not latent core work
+//! (see `BACKLOG.md`).
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
@@ -175,12 +176,15 @@ impl<Body> Bearing<Body> {
     }
 }
 
-/// A domain-supplied verdict on whether a `Bearing` target is already met by reality.
+/// A normalized planning effect for the domain's judgment about whether a `Bearing`
+/// target is already met by reality.
 ///
 /// The core cannot decide this — comparing an observed state against a desired one is a
 /// semantic judgment (the *fourth face* of the semantic bill of purity) — so the domain
-/// supplies it and the core only consumes it. `#[non_exhaustive]` because the taxonomy is
-/// the domain's to settle.
+/// supplies the judgment and normalizes it to one of the finite effects the residual
+/// mechanism consumes. The domain's production taxonomy remains unrestricted downstream;
+/// this enum belongs to Suunta and defines only mechanical residual effects.
+/// `#[non_exhaustive]` permits Suunta to evolve that consumption vocabulary.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum Satisfaction {
@@ -192,10 +196,12 @@ pub enum Satisfaction {
     Unknown,
 }
 
-/// A satisfaction finding: the domain's [`Satisfaction`] verdict for one `Bearing` target.
+/// A satisfaction finding: the domain's normalized [`Satisfaction`] effect for one
+/// `Bearing` target.
 ///
-/// This is the `Fix` reaching the core — a domain-certified verdict per target, never a
-/// raw observation. The core reads no observation body; satisfaction is judged upstream.
+/// This is the `Fix` reaching the core — a domain-certified effect per target, never a
+/// raw observation. Satisfaction is judged and normalized upstream; the core only applies
+/// its mechanical contribution.
 #[derive(Debug, Clone)]
 pub struct SatisfactionFinding {
     /// The `Bearing` target this verdict is about, by its `Sigil`.
@@ -205,7 +211,7 @@ pub struct SatisfactionFinding {
 }
 
 /// The `Fix`: one sounding's certified satisfaction of the `Bearing`'s targets — the
-/// aggregate of per-target [`SatisfactionFinding`]s.
+/// aggregate of per-target normalized [`SatisfactionFinding`]s.
 ///
 /// A reading taken *against intent*, which only the domain can take (comparing reality
 /// to a desired target is a meaning comparison the core cannot make); the core consumes
@@ -240,28 +246,33 @@ impl Fix {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct InFlightIndex(pub usize);
 
-/// A domain-supplied verdict on an in-flight `Correction`'s relation to the current plan.
+/// A normalized planning effect for the domain's judgment about an in-flight
+/// `Correction`'s relation to the current plan.
 ///
-/// Named by its *effect* on residual planning, not by a fixed classification taxonomy;
-/// `#[non_exhaustive]` because the domain's taxonomy is not frozen.
+/// The domain owns how it produces and normalizes its relation judgment. Suunta owns only
+/// these finite effects because each changes the residual or its surfaced findings.
+/// `Covers` is target-scoped; `Superseded` and `Conflicts` describe the referenced
+/// in-flight instance relative to the current plan as a whole. `#[non_exhaustive]`
+/// permits Suunta to evolve its consumption vocabulary; it does not make the enum
+/// downstream-extensible.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum CoverageEffect {
     /// The in-flight correction covers the named `Bearing` target; the residual may omit
     /// that target.
     Covers(Sigil),
-    /// The current plan makes the in-flight correction obsolete; surfaced, never disposed.
-    Supersedes,
+    /// The current plan makes the referenced in-flight correction obsolete; surfaced,
+    /// never disposed.
+    Superseded,
     /// The in-flight correction cannot safely coexist with the plan; surfaced, never disposed.
     Conflicts,
-    /// The domain certifies the in-flight correction is unrelated; excluded from coverage.
-    Disjoint,
 }
 
-/// A coverage finding: the domain's [`CoverageEffect`] verdict for one in-flight instance.
+/// A coverage finding: one normalized [`CoverageEffect`] for an in-flight instance.
 ///
-/// This is the *relevant in-flight* reaching the core — a domain-certified verdict, never a
-/// raw in-flight `Correction`. The core never inspects the in-flight corrections themselves.
+/// This is the *relevant in-flight* reaching the core — a domain-certified effect, never
+/// a raw in-flight `Correction`. Production and richer relation taxonomies remain
+/// downstream; the core never inspects the in-flight corrections themselves.
 #[derive(Debug, Clone)]
 pub struct CoverageFinding {
     /// The in-flight instance this verdict is about.
@@ -271,7 +282,7 @@ pub struct CoverageFinding {
 }
 
 /// A `Sounding`: one convergence cycle's certified readings — the [`Fix`] and the
-/// coverage findings the domain took this cycle.
+/// normalized coverage effects the domain supplied this cycle.
 ///
 /// It carries **no** domain `Body`: it is a non-generic type that references targets and
 /// in-flight `Correction`s only by [`Sigil`]/[`InFlightIndex`] and verdict, so the core
@@ -298,7 +309,7 @@ impl Sounding {
         &self.fix
     }
 
-    /// This cycle's coverage findings about in-flight `Correction`s.
+    /// This cycle's normalized coverage effects for in-flight `Correction`s.
     #[must_use]
     pub fn coverage(&self) -> &[CoverageFinding] {
         &self.coverage
@@ -329,6 +340,33 @@ pub struct Residual<Body> {
     pub course: Course<Body>,
     /// Findings surfaced for the consumer to dispose of (uncertainty, supersession, conflict).
     pub surfaced: Vec<SurfacedFinding>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum FoldedSatisfaction {
+    Satisfied,
+    Unsatisfied,
+    Uncertain,
+}
+
+fn fold_satisfaction(findings: &[SatisfactionFinding], target: &Sigil) -> FoldedSatisfaction {
+    let mut saw_satisfied = false;
+    let mut saw_unsatisfied = false;
+    let mut saw_unknown = false;
+
+    for finding in findings.iter().filter(|finding| &finding.target == target) {
+        match finding.satisfaction {
+            Satisfaction::Satisfied => saw_satisfied = true,
+            Satisfaction::Unsatisfied => saw_unsatisfied = true,
+            Satisfaction::Unknown => saw_unknown = true,
+        }
+    }
+
+    match (saw_satisfied, saw_unsatisfied, saw_unknown) {
+        (true, false, false) => FoldedSatisfaction::Satisfied,
+        (false, true, false) => FoldedSatisfaction::Unsatisfied,
+        _ => FoldedSatisfaction::Uncertain,
+    }
 }
 
 impl<Body> Residual<Body> {
@@ -373,48 +411,32 @@ pub fn plan_residual<Body>(bearing: Bearing<Body>, sounding: &Sounding) -> Resid
     let satisfaction = sounding.fix().findings();
     let coverage = sounding.coverage();
 
-    let has_verdict = |sig: &Sigil, want: Satisfaction| {
-        satisfaction
-            .iter()
-            .any(|f| &f.target == sig && f.satisfaction == want)
-    };
-    let is_covered = |sig: &Sigil| {
-        coverage
-            .iter()
-            .any(|f| matches!(&f.effect, CoverageEffect::Covers(t) if t == sig))
-    };
-
     let mut surfaced = Vec::new();
+    let mut covered = Vec::new();
 
-    // In-flight disposition: surfaced, never disposed. Disjoint/Covers change no disposition.
+    // Every normalized coverage effect contributes independently. This match is
+    // deliberately exhaustive: a future effect must define its mechanical contribution.
     for finding in coverage {
-        match finding.effect {
-            CoverageEffect::Supersedes => {
+        match &finding.effect {
+            CoverageEffect::Covers(target) => covered.push(target),
+            CoverageEffect::Superseded => {
                 surfaced.push(SurfacedFinding::Superseded(finding.inflight));
             }
             CoverageEffect::Conflicts => {
                 surfaced.push(SurfacedFinding::Conflicting(finding.inflight));
             }
-            _ => {}
         }
     }
 
     let mut retained = Vec::new();
     for target in bearing.into_targets() {
         let sig = target.sigil();
-        // Omit only on positive, unambiguous certification.
-        let satisfied = has_verdict(sig, Satisfaction::Satisfied)
-            && !has_verdict(sig, Satisfaction::Unsatisfied)
-            && !has_verdict(sig, Satisfaction::Unknown);
-        if satisfied || is_covered(sig) {
+        let folded = fold_satisfaction(satisfaction, sig);
+        let is_covered = covered.contains(&sig);
+        if folded == FoldedSatisfaction::Satisfied || is_covered {
             continue;
         }
-        // Retained. Alarm only when retention rests on uncertainty (Unknown or absent),
-        // not on a known Unsatisfied.
-        let known_unsatisfied = has_verdict(sig, Satisfaction::Unsatisfied)
-            && !has_verdict(sig, Satisfaction::Unknown)
-            && !has_verdict(sig, Satisfaction::Satisfied);
-        if !known_unsatisfied {
+        if folded == FoldedSatisfaction::Uncertain {
             surfaced.push(SurfacedFinding::UnknownRetained(sig.clone()));
         }
         retained.push(target);
@@ -574,20 +596,16 @@ mod tests {
     }
 
     #[test]
-    fn supersession_and_conflict_surface_disjoint_does_not() {
+    fn supersession_and_conflict_surface_referenced_instances() {
         let bearing: Bearing<u8> = Bearing::new(vec![]);
         let coverage = vec![
             CoverageFinding {
                 inflight: InFlightIndex(2),
-                effect: CoverageEffect::Supersedes,
+                effect: CoverageEffect::Superseded,
             },
             CoverageFinding {
                 inflight: InFlightIndex(5),
                 effect: CoverageEffect::Conflicts,
-            },
-            CoverageFinding {
-                inflight: InFlightIndex(9),
-                effect: CoverageEffect::Disjoint,
             },
         ];
         let residual = plan_residual(bearing, &sounding(vec![], coverage));
@@ -601,27 +619,170 @@ mod tests {
                 .surfaced
                 .contains(&SurfacedFinding::Conflicting(InFlightIndex(5)))
         );
-        assert_eq!(residual.surfaced.len(), 2, "Disjoint surfaces nothing");
+        assert_eq!(residual.surfaced.len(), 2);
     }
 
     #[test]
-    fn disjoint_neither_covers_a_target_nor_surfaces() {
-        // Coverage law: Disjoint is a positive "unrelated" verdict. It excludes an
-        // in-flight instance from coverage without covering any Bearing target and
-        // without surfacing anything. A known-unsatisfied target is retained (not
-        // surfaced), so the residual isolates the Disjoint finding's (non-)effect.
+    fn satisfaction_effects_fold_conservatively_and_idempotently() {
+        struct Case {
+            name: &'static str,
+            findings: Vec<SatisfactionFinding>,
+            retained: bool,
+            surfaced_unknown: bool,
+        }
+
+        let cases = [
+            Case {
+                name: "repeated satisfied",
+                findings: vec![
+                    sat("a", Satisfaction::Satisfied),
+                    sat("a", Satisfaction::Satisfied),
+                ],
+                retained: false,
+                surfaced_unknown: false,
+            },
+            Case {
+                name: "repeated unsatisfied",
+                findings: vec![
+                    sat("a", Satisfaction::Unsatisfied),
+                    sat("a", Satisfaction::Unsatisfied),
+                ],
+                retained: true,
+                surfaced_unknown: false,
+            },
+            Case {
+                name: "absent",
+                findings: vec![],
+                retained: true,
+                surfaced_unknown: true,
+            },
+            Case {
+                name: "unknown",
+                findings: vec![sat("a", Satisfaction::Unknown)],
+                retained: true,
+                surfaced_unknown: true,
+            },
+            Case {
+                name: "mixed known values",
+                findings: vec![
+                    sat("a", Satisfaction::Satisfied),
+                    sat("a", Satisfaction::Unsatisfied),
+                ],
+                retained: true,
+                surfaced_unknown: true,
+            },
+            Case {
+                name: "known plus unknown",
+                findings: vec![
+                    sat("a", Satisfaction::Unsatisfied),
+                    sat("a", Satisfaction::Unknown),
+                ],
+                retained: true,
+                surfaced_unknown: true,
+            },
+        ];
+
+        for case in cases {
+            let residual = plan_residual(
+                Bearing::new(vec![corr("a", 1)]),
+                &sounding(case.findings, vec![]),
+            );
+            assert_eq!(
+                !residual.course.corrections().is_empty(),
+                case.retained,
+                "{}",
+                case.name
+            );
+            assert_eq!(
+                residual
+                    .surfaced
+                    .contains(&SurfacedFinding::UnknownRetained(Sigil::new("a"))),
+                case.surfaced_unknown,
+                "{}",
+                case.name
+            );
+        }
+    }
+
+    #[test]
+    fn coverage_is_existential_and_idempotent_per_target() {
+        let bearing = Bearing::new(vec![corr("a", 1), corr("b", 2), corr("c", 3)]);
+        let coverage = vec![
+            CoverageFinding {
+                inflight: InFlightIndex(0),
+                effect: CoverageEffect::Covers(Sigil::new("a")),
+            },
+            CoverageFinding {
+                inflight: InFlightIndex(0),
+                effect: CoverageEffect::Covers(Sigil::new("b")),
+            },
+            CoverageFinding {
+                inflight: InFlightIndex(0),
+                effect: CoverageEffect::Covers(Sigil::new("a")),
+            },
+            CoverageFinding {
+                inflight: InFlightIndex(1),
+                effect: CoverageEffect::Covers(Sigil::new("b")),
+            },
+        ];
+        let satisfaction = vec![
+            sat("a", Satisfaction::Unsatisfied),
+            sat("b", Satisfaction::Unsatisfied),
+            sat("c", Satisfaction::Unsatisfied),
+        ];
+        let residual = plan_residual(bearing, &sounding(satisfaction, coverage));
+
+        assert_eq!(retained_sigils(&residual), ["c"]);
+        assert!(residual.surfaced.is_empty());
+    }
+
+    #[test]
+    fn conflict_and_supersession_each_compose_independently_with_coverage() {
+        let referenced = InFlightIndex(7);
+        let cases = [
+            (
+                CoverageEffect::Conflicts,
+                SurfacedFinding::Conflicting(referenced),
+            ),
+            (
+                CoverageEffect::Superseded,
+                SurfacedFinding::Superseded(referenced),
+            ),
+        ];
+
+        for (effect, expected) in cases {
+            let residual = plan_residual(
+                Bearing::new(vec![corr("a", 1)]),
+                &sounding(
+                    vec![sat("a", Satisfaction::Unsatisfied)],
+                    vec![
+                        CoverageFinding {
+                            inflight: referenced,
+                            effect: CoverageEffect::Covers(Sigil::new("a")),
+                        },
+                        CoverageFinding {
+                            inflight: referenced,
+                            effect,
+                        },
+                    ],
+                ),
+            );
+
+            assert!(residual.course.corrections().is_empty());
+            assert!(residual.surfaced.contains(&expected));
+            assert!(!residual.is_converged());
+        }
+    }
+
+    #[test]
+    fn absent_coverage_is_the_identity_not_a_disjointness_inference() {
         let bearing = Bearing::new(vec![corr("a", 1)]);
-        let coverage = vec![CoverageFinding {
-            inflight: InFlightIndex(0),
-            effect: CoverageEffect::Disjoint,
-        }];
         let residual = plan_residual(
             bearing,
-            &sounding(vec![sat("a", Satisfaction::Unsatisfied)], coverage),
+            &sounding(vec![sat("a", Satisfaction::Unsatisfied)], vec![]),
         );
-        // Disjoint did not cover the target -> it is retained.
+
         assert_eq!(retained_sigils(&residual), ["a"]);
-        // Disjoint surfaces nothing, and a known-unsatisfied target is not an alarm.
         assert!(residual.surfaced.is_empty());
     }
 

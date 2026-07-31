@@ -50,76 +50,136 @@ Positively-Certified Targets".
 - **THEN** the `Course` retains both; the core collapses nothing, because equality of meaning is not the core's to decide
 
 ### Requirement: The Residual Omits Only Positively-Certified Targets
-The residual `Course` SHALL contain every `Bearing` target except those a domain finding
-positively certifies as `Satisfied` (reality already meets it) or `Covered` (a relevant
-in-flight `Correction` handles it). A target that is `Unsatisfied`, uncovered, `Unknown`,
-or has no finding SHALL be retained. Absence and uncertainty SHALL NOT omit a target — only
-positive certification omits. This realizes the computation deferred by "A Course Is A
+The residual `Course` SHALL contain every `Bearing` target except those a domain
+finding positively certifies as `Satisfied` (reality already meets it) or
+`Covered` (a relevant in-flight `Correction` handles it). Satisfaction findings
+for one target SHALL compose as a mutually exclusive scalar verdict: one or more
+`Satisfied` findings with no other satisfaction value SHALL omit the target; one
+or more `Unsatisfied` findings with no other value SHALL retain it without an
+uncertainty finding; absence, any `Unknown`, or mixed known values SHALL retain
+and surface it as unknown. Coverage SHALL be existential and idempotent per
+target: any `Covers(target)` finding SHALL omit that target independently of
+other coverage effects. This realizes the computation deferred by "A Course Is A
 Residual".
 
 #### Scenario: A satisfied or covered target is omitted
-- **WHEN** a `Bearing` target has a `Satisfied` satisfaction finding, or a `Covered` coverage finding naming a relevant in-flight `Correction`
+- **WHEN** a target has only `Satisfied` satisfaction findings, or at least one `Covers(target)` coverage finding
 - **THEN** the target is omitted from the residual `Course`
 
 #### Scenario: Absence and uncertainty retain
-- **WHEN** a `Bearing` target has no finding, or an `Unsatisfied` or `Unknown` finding
-- **THEN** the target is retained in the residual `Course`
+- **WHEN** a target has no satisfaction finding, any `Unknown` finding, or mixed satisfaction values and has no `Covers(target)` finding
+- **THEN** the target is retained and surfaced as `UnknownRetained`
+
+#### Scenario: Known unsatisfied retains without uncertainty
+- **WHEN** a target has one or more `Unsatisfied` findings, no other satisfaction value, and no `Covers(target)` finding
+- **THEN** the target is retained without an `UnknownRetained` finding
+
+#### Scenario: Repeated positive certification is idempotent
+- **WHEN** a target receives repeated identical `Satisfied` or `Covers(target)` findings
+- **THEN** its omission result is the same as for one such finding
 
 ### Requirement: Fix Is Domain-Certified Satisfaction, Not Observation
-`Fix` SHALL be a named type in `suunta-contract` that aggregates domain-certified
-satisfaction findings — a `Satisfaction` verdict per referenced `Bearing` target
-(`SatisfactionFinding`) — and SHALL NOT be a bare set of satisfied `Sigil`s nor a store of
-raw observations. Whether a target is satisfied is a domain judgment the core consumes;
-the core SHALL NOT read observation content or compute satisfaction itself.
+`Fix` SHALL be a named type in `suunta-contract` that aggregates
+domain-certified satisfaction findings — a normalized `Satisfaction` planning
+effect per referenced `Bearing` target (`SatisfactionFinding`) — and SHALL NOT be
+a bare set of satisfied `Sigil`s nor a store of raw observations. The domain
+SHALL own how it observes reality and produces or normalizes its judgment;
+Suunta SHALL own only the finite consumption effects its residual mechanism
+understands. The core SHALL NOT read observation content or compute satisfaction
+itself.
 
 #### Scenario: Satisfaction is consumed, not computed
 - **WHEN** the core needs to know whether a `Bearing` target is satisfied
-- **THEN** it consumes a domain-supplied `Satisfaction` verdict rather than comparing an observed state against the desired one
+- **THEN** it consumes a domain-supplied normalized `Satisfaction` effect rather than comparing an observed state against the desired one
 
-#### Scenario: Fix carries verdicts, not observations
+#### Scenario: Domain taxonomy remains downstream
+- **WHEN** a domain has richer internal satisfaction states than Suunta consumes
+- **THEN** the domain normalizes them before constructing the `Fix`, without implementing a Suunta trait or extending the core enum
+
+#### Scenario: Fix carries effects, not observations
 - **WHEN** a `Fix` is supplied to the planner
-- **THEN** it carries per-target satisfaction verdicts, and the core reads no observation body
+- **THEN** it carries per-target satisfaction effects, and the core reads no observation body
 
 #### Scenario: Fix is a named aggregate
 - **WHEN** a `Fix` is constructed
 - **THEN** it is a distinct type wrapping the cycle's `SatisfactionFinding`s, not a bare slice or set, and the per-target entry remains a `SatisfactionFinding`
 
 ### Requirement: Uncertainty And Disposition Are Surfaced, Not Resolved
-The planner SHALL surface, on its output, each target retained under `Unknown` and each
-in-flight `Correction` a coverage finding marks superseded or conflicting. The core SHALL
-NOT cancel, compensate, or otherwise dispose of them, and SHALL name no execution-lifecycle
-state; disposition is a downstream/consumer concern.
+The planner SHALL surface, on its output, each target retained under uncertain
+satisfaction and each in-flight `Correction` a coverage finding marks superseded
+by or conflicting with the current plan. Supersession SHALL point from the
+current plan to the referenced in-flight instance. Each surfaced supersession or
+conflict SHALL preserve its effect category and `InFlightIndex`; no target
+context SHALL be required for these instance-scoped effects. The core SHALL NOT
+cancel, compensate, prioritize, or otherwise dispose of them, and SHALL name no
+execution-lifecycle state.
 
 #### Scenario: Unknown retention is an observable finding
-- **WHEN** a target is retained only because its satisfaction is `Unknown`
-- **THEN** the planner surfaces it as an `Unknown`-retained finding, so the uncertainty is visible rather than silently over-planned
+- **WHEN** a target is retained because satisfaction is absent, `Unknown`, or mixed
+- **THEN** the planner surfaces it as `UnknownRetained`, so uncertainty is visible rather than silently over-planned
 
-#### Scenario: Supersession and conflict are surfaced, not disposed
-- **WHEN** a coverage finding marks an in-flight `Correction` superseded or conflicting
-- **THEN** the planner surfaces it on the output and takes no cancelling or compensating action
+#### Scenario: The current plan supersedes an in-flight instance
+- **WHEN** a coverage finding marks its referenced in-flight correction `Superseded`
+- **THEN** the planner surfaces `SurfacedFinding::Superseded` with that `InFlightIndex` and takes no cancelling action
+
+#### Scenario: Conflict preserves the referenced instance
+- **WHEN** a coverage finding marks its referenced in-flight correction `Conflicts`
+- **THEN** the planner surfaces `SurfacedFinding::Conflicting` with that `InFlightIndex` and makes no disposition
 
 ### Requirement: Coverage Findings Are Instance-Referenced And Positively Certified
-A coverage finding SHALL reference a specific in-flight `Correction` **instance** by
-position (`InFlightIndex`), never by `Sigil`, because a `Course` does not deduplicate and
-two in-flight `Correction`s may share a `Sigil`. The domain's relevance verdict SHALL be
-positively certified per referenced instance: the **absence** of a finding for an
-in-flight instance SHALL mean *unknown* — the core forms no relevance verdict about it and
-it SHALL NOT be treated as ignorable. Ignorability SHALL be a positive certification
-(a `Disjoint` finding), never derived from absence (the seam's false-negative bound). This
-requirement SHALL NOT fix the coverage-effect taxonomy — the number of effects, their
-names, supersession directionality, and pairwise-vs-aggregate scope remain open.
+A coverage finding SHALL reference a specific in-flight `Correction` instance by
+position (`InFlightIndex`), never by `Sigil`, because a `Course` does not
+deduplicate and two in-flight corrections may share a `Sigil`. The domain SHALL
+own judgment production and SHALL normalize it into Suunta's finite
+`CoverageEffect` consumption vocabulary.
+
+Effect scope SHALL follow mechanical contribution: `Covers(Sigil)` SHALL relate
+the referenced instance to one semantic `Bearing` target;
+`Superseded` and `Conflicts` SHALL describe the referenced instance relative to
+the current plan as a whole. `Superseded` SHALL mean the current plan supersedes
+the referenced in-flight instance.
+
+Coverage effects SHALL compose independently. Every `Covers(target)` SHALL
+contribute existential, idempotent target coverage; every `Superseded` or
+`Conflicts` finding SHALL contribute its corresponding surfaced instance. The
+core SHALL NOT infer precedence, mutual exclusion, or semantic contradiction
+among supplied effects.
+
+Absence SHALL be the coverage algebra's identity: the core forms no relevance
+verdict, omits no target, and surfaces no instance. `Disjoint` SHALL NOT be a
+Suunta `CoverageEffect`, because the residual mechanism cannot distinguish it
+from absence and does not consume the domain's production-side classification.
+Only a positive `Covers(target)` effect SHALL omit a target. Planner-internal
+effect handling SHALL be exhaustive so a future Suunta-owned effect cannot
+silently bypass residual review.
 
 #### Scenario: Findings reference instances, not sigils
 - **WHEN** two in-flight `Correction`s share a `Sigil` and the domain reports a coverage finding about one of them
 - **THEN** the finding identifies that instance by its `InFlightIndex`, and the other instance is unaffected
 
-#### Scenario: Ignorability is positively certified, not inferred from absence
-- **WHEN** an in-flight instance has no coverage finding
-- **THEN** the core forms no coverage verdict about it and never treats it as ignorable; only a positive `Disjoint` finding certifies ignorability
+#### Scenario: One in-flight instance covers multiple targets
+- **WHEN** findings for one `InFlightIndex` contain `Covers(alpha)` and `Covers(beta)`
+- **THEN** both targets are omitted without requiring pairwise supersession or conflict shapes
 
-#### Scenario: A Disjoint finding excludes from coverage without surfacing
-- **WHEN** a coverage finding certifies an in-flight instance `Disjoint`
-- **THEN** the instance is excluded from coverage and nothing is surfaced for it — it neither covers a `Bearing` target nor is flagged
+#### Scenario: Coverage and conflict compose independently
+- **WHEN** one referenced in-flight instance has `Covers(alpha)` and `Conflicts` findings
+- **THEN** `alpha` is omitted and that instance is surfaced as conflicting, so the residual does not report full convergence
+
+#### Scenario: Coverage and supersession compose independently
+- **WHEN** one referenced in-flight instance has `Covers(alpha)` and `Superseded` findings
+- **THEN** `alpha` is omitted and that instance is surfaced as superseded without the core inventing precedence
+
+#### Scenario: Absence is the identity and never positive coverage
+- **WHEN** no coverage effect is supplied for an in-flight instance or target
+- **THEN** the core omits no target, surfaces no instance, and infers no reason for the absence
+
+#### Scenario: Disjointness remains production-side knowledge
+- **WHEN** a domain knows an in-flight instance is disjoint from the current plan
+- **THEN** it retains that classification downstream and supplies no Suunta coverage effect, because the core has no mechanical contribution for it
+
+#### Scenario: A future effect requires planner classification
+- **WHEN** Suunta adds a new `CoverageEffect` variant
+- **THEN** exhaustive internal handling fails to compile until the new effect's residual and surfacing contribution is explicitly defined
 
 ### Requirement: The Planner Is Functional Per Cycle
 `plan_residual` SHALL be a pure function of a single cycle's inputs — a `Bearing` and a
@@ -139,23 +199,26 @@ against, not part of the reading.
 - **THEN** it takes the `Bearing` and that cycle's `Sounding`, and the `Sounding` supplies the `Fix` and the coverage findings
 
 ### Requirement: The Core Makes No Semantic Judgment
-The planning core SHALL make no semantic judgment. Semantic identity, **target
-satisfaction**, relevance, and whether an obligation is settled SHALL be domain-supplied —
-as a `Sigil`, a **satisfaction verdict**, a coverage verdict, and a settlement predicate
-respectively. The core's role SHALL be limited to computing the residual and recording; it
-SHALL NOT compare meanings — in particular it cannot decide whether reality meets a desired
-`Bearing` target, which is why satisfaction is domain-supplied and that per-target verdict
-is the `Fix`. This is the semantic bill of purity — now **four faces** of one purity
-choice: its cost — an undetected domain semantic error fails silently — SHALL be accepted
-rather than patched by pulling judgment into the core.
+The planning core SHALL make no semantic judgment. Semantic identity, target
+satisfaction, relevance, and whether an obligation is settled SHALL be
+domain-supplied. The domain SHALL choose and normalize those judgments; Suunta
+SHALL define only the mechanical consumption effects required by its residual
+mechanism and SHALL apply each supplied effect without comparing meanings,
+inventing precedence, or disposing of findings. This is the semantic bill of
+purity: its cost — an undetected domain semantic error fails silently — SHALL be
+accepted rather than patched by pulling judgment into the core.
 
 #### Scenario: The four judgments are the domain's
 - **WHEN** the core needs semantic identity, target satisfaction, relevance, or a settlement decision
-- **THEN** it consumes a domain-supplied `Sigil`, satisfaction verdict, coverage verdict, or settlement predicate rather than deciding it
+- **THEN** it consumes a domain-supplied `Sigil` or normalized verdict rather than deciding meaning or requiring a judgment-production trait
+
+#### Scenario: Owning effects does not own judgment
+- **WHEN** Suunta defines how a normalized satisfaction or coverage effect changes the residual
+- **THEN** that mechanical algebra does not decide whether the effect is true; the domain remains responsible for supplying it
 
 #### Scenario: The cost is accepted, not patched
-- **WHEN** a domain supplies an incorrect semantic judgment
-- **THEN** the core does not prevent the resulting failure by making the judgment itself; it stays pure, and any defense is a downstream concern
+- **WHEN** a domain supplies semantically inconsistent coverage effects
+- **THEN** the core applies their independent mechanical contributions without diagnosing meaning, prioritizing one, or pulling reconciliation into the core
 
 ### Requirement: Corrections Carry A Stable Sigil
 Each `Correction` SHALL carry a domain-supplied `Sigil` that is stable across
@@ -254,4 +317,3 @@ domain judgment, not a mechanical read.
 #### Scenario: The read makes no semantic judgment
 - **WHEN** the convergence read is computed
 - **THEN** it reads only whether the course and surfaced collections are empty, inspecting no `Body` and comparing no meaning
-

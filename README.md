@@ -8,9 +8,9 @@ semantic judgment of its own.
 
 ```text
 Domain certifies reality against the Bearing's targets:
-  per target    -> Fix       (satisfaction verdict)  ┐
-  per in-flight -> coverage   (relevance verdict)     ┤ Suunta filters the Bearing
-Domain          -> Bearing    (desired targets)       ┘   -> Course (residual Corrections, each with a Sigil)
+  per target    -> Fix       (normalized satisfaction effect)  ┐
+  per in-flight -> coverage   (normalized planning effect)      ┤ Suunta filters the Bearing
+Domain          -> Bearing    (desired targets)                 ┘   -> Course (residual Corrections, each with a Sigil)
 ```
 
 It is for the narrow space between "I keep reconciling desired state against
@@ -25,7 +25,8 @@ mechanism — the residual filter (`plan_residual`) — and the `Correction`/`Co
 `Reversibility` vocabulary, its architectural axioms, and executable governance; every semantic
 judgment (identity, satisfaction, relevance, settlement) is the domain's to supply. It does
 **not** own settlement, a production-side coverage contract, or an async edge — those are the
-domain's or are deferred (see `BACKLOG.md`).
+domain's downstream concerns, with their homes settled rather than awaiting core work (see
+`BACKLOG.md`).
 
 Depend on the curated **facade** (`suunta`) — the recommended single entrypoint, which re-exports
 the compose-level surface and carries a runnable convergence-loop doctest; the isolated core
@@ -41,14 +42,17 @@ obligation is *settled*. Those are yours.
 ```text
 The domain supplies (meaning)                 Suunta owns (mechanism, no meaning)
   Sigil        a stable semantic identity        the residual computation (plan_residual)
-  satisfaction whether a Bearing target is met   the Course / Correction / Sigil vocabulary
-  coverage     which in-flight work is relevant   reversibility marking (One-Way)
-  predicate    when an obligation is settled      surfacing Unknown / supersession / conflict
+  satisfaction whether a Bearing target is met   normalized Satisfaction effects
+  coverage     which in-flight work is relevant  normalized CoverageEffect values
+  settlement   when an obligation is concluded   Course / Correction / Sigil vocabulary
+                                                  surfacing Unknown / supersession / conflict
 ```
 
 The core filters the `Bearing` to the `Correction`s that remain, given the domain's
-verdicts; it does not decide their meaning, their durability, their gating, or their
-compensation — those are downstream consumer concerns.
+judgments normalized into its planning effects. Owning what those effects do to the
+residual does not make the judgment: Suunta never decides whether an effect is true.
+It does not decide meaning, durability, gating, or compensation — those are downstream
+consumer concerns.
 
 ## Why sans-I/O and no semantic judgment
 
@@ -68,7 +72,7 @@ Suunta uses navigation terms as architecture, not branding — `Sounding`, `Fix`
 
 - `PROJECT.md` — vision, positioning, non-goals.
 - `openspec/specs/` — shipped requirements.
-- `BACKLOG.md` — deferred decisions and open design questions.
+- `BACKLOG.md` — dispositions, reconsiderations, and candidate design questions.
 - `AGENTS.md` — operating protocol and the Definition of Done.
 
 ## Contributing
