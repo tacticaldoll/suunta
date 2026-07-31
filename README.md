@@ -17,11 +17,11 @@ to the domain.
 
 ## Status (0.1.0)
 
-This is the **initial project shape**, not a working planner yet. It ships the
-contract vocabulary, the architectural axioms, the executable governance, and a
-compiling crate skeleton. The residual-planning core is defined in `openspec/specs/`
-and implemented in later spec-driven changes — deliberately, because the design
-still has open questions (see `BACKLOG.md`).
+0.1.0 ships the residual planner: `plan_residual` computes the residual `Course` from
+a `Bearing` and domain-supplied satisfaction and coverage findings, alongside the
+`Correction`/`Course`/`Sigil`/`Reversibility` vocabulary, the architectural axioms,
+and the executable governance. What is still deferred — the settlement predicate, the
+production-side coverage contract, and an async edge — is recorded in `BACKLOG.md`.
 
 ## What Suunta owns, and what the domain supplies
 
@@ -30,11 +30,11 @@ intent and reality; it never decides what two things *mean*, whether one is
 *relevant*, or whether an obligation is *settled*. Those are yours.
 
 ```text
-The domain supplies (meaning)                Suunta owns (mechanism, no meaning)
-  Sigil     a stable semantic identity         the residual computation
-  coverage  which in-flight work is relevant    (Bearing vs Fix ∪ relevant in-flight)
-  predicate when an obligation is settled       the Course / Correction vocabulary
-                                                reversibility marking (One-Way)
+The domain supplies (meaning)                 Suunta owns (mechanism, no meaning)
+  Sigil        a stable semantic identity        the residual computation (plan_residual)
+  satisfaction whether a Bearing target is met   the Course / Correction / Sigil vocabulary
+  coverage     which in-flight work is relevant   reversibility marking (One-Way)
+  predicate    when an obligation is settled      surfacing Unknown / supersession / conflict
 ```
 
 The core decides which `Correction`s close the drift; it does not decide their
@@ -44,10 +44,10 @@ consumer concerns.
 ## Why sans-I/O and no semantic judgment
 
 A pure core that reads no clock and performs no I/O cannot make a semantic judgment
-either — so it outsources all three (identity, relevance, settlement) to the domain.
-This is the **semantic bill of purity**: its cost is that an undetected domain
-semantic error fails silently, accepted deliberately rather than patched by pulling
-judgment back into the core. See `PROJECT.md` and `BACKLOG.md`.
+either — so it outsources all four (identity, satisfaction, relevance, settlement) to
+the domain. This is the **semantic bill of purity**: its cost is that an undetected
+domain semantic error fails silently, accepted deliberately rather than patched by
+pulling judgment back into the core. See `PROJECT.md` and `BACKLOG.md`.
 
 ## Domain Language
 
