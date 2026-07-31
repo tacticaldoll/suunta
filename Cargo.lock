@@ -108,18 +108,18 @@ dependencies = [
 
 [[package]]
 name = "suunta"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "suunta-contract",
 ]
 
 [[package]]
 name = "suunta-contract"
-version = "0.1.0"
+version = "0.1.1"
 
 [[package]]
 name = "suunta-governance"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "guibiao",
  "tianheng",
