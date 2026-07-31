@@ -87,6 +87,25 @@ before it is committed. Actively challenge the design:
 
 Reject or redesign changes that pull Suunta toward an orchestration monolith.
 
+## Disposition Discipline
+
+An open design question is dispositioned from Suunta's identity as a design pattern,
+never by deferring to a consumer that does not yet exist. Adjudicate each open item into
+exactly one of:
+
+- a **noun** — part of Suunta's owned surface (the navigation vocabulary or the residual
+  mechanism), articulated now from the pattern's own needs; or
+- a **verb** — judgment, execution, or driving that belongs to the consumer, declared
+  downstream and permanently not Suunta's.
+
+"Wait for the first real consumer to force the shape" is not a valid disposition: it
+hands Suunta's design authority to a coupling partner and drifts the pattern toward the
+consumer-driven monolith it is defined against. Declaring an item a permanent consumer
+verb commits Suunta to *less*, not more, than freezing a shape once a consumer appears,
+so this discipline strengthens least-commitment rather than weakening it. Review rejects
+any proposal that reintroduces consumer-driven deferral. Like the no-semantic-judgment
+axiom, this is a judgment-level, review-governed rule — not a Tianheng tooth.
+
 ## OpenSpec Workflow
 
 This repository uses OpenSpec. The lifecycle is:

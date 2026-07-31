@@ -2,12 +2,16 @@
 
 ## Vision
 
-Suunta is a thin, sans-I/O convergence-planning core for Rust: given a desired
-`Bearing` and the domain's certified satisfaction of each target (the `Fix`), it
+Suunta is a thin, sans-I/O **convergence-planning design pattern** for Rust: given a
+desired `Bearing` and the domain's certified satisfaction of each target (the `Fix`), it
 computes the residual `Course` — the `Correction`s that remain to converge — by
 filtering the `Bearing` to what the domain has not certified done. It observes no
 reality and compares no meanings; it consumes the domain's verdicts and makes no
 semantic judgment of its own.
+
+What Suunta delivers is the *pattern*, not a batteries-included engine: it owns the
+**nouns** — the residual mechanism and the navigation vocabulary — and outsources every
+**verb** (judgment, execution, driving) to the domain that composes it.
 
 It fills a narrow gap: the thinnest useful planning primitive that computes *what
 remains* to close the drift between intent and reality — not by diffing reality
@@ -35,6 +39,22 @@ clean, pure place to attach:
 - domain-supplied relevance (a coverage verdict)
 - domain-supplied settlement predicates
 - downstream durability, gating, and compensation — consumer concerns, not Suunta
+
+### Nouns, verbs, and inward-pointing governance
+
+Suunta's users are **composition-driven**: they assemble freely-decoupled blocks, and
+they do not drive Suunta's shape by coupling to it. The division of labour is fixed:
+
+- Suunta owns the **nouns** — the vocabulary of exchange (`Sounding`, `Fix`, `Bearing`,
+  `Course`, `Correction`, `Sigil`, `Drift`) and the residual mechanism that relates them.
+- The consumer owns the **verbs** — judgment, execution, and driving the loop.
+
+Suunta's governance teeth point **inward**: they constrain Suunta's own purity
+(sans-I/O, dependency isolation, facade re-export purity), never a consumer's design.
+This is the inverse of a framework like Tower, whose `Service` trait dictates the
+consumer's shape. Because the deliverable is a pattern, Suunta decides its own surface
+from this identity — it does not defer that decision to a consumer that does not yet
+exist.
 
 ## Core Contract
 
