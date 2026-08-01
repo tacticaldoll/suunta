@@ -4,6 +4,39 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-08-01
+
+Non-breaking maintenance release: value-type equality, crate-README governance,
+`const fn` widening, and documentation-drift fixes. No public API removal or
+signature change; every addition is backward compatible.
+
+### Added
+
+- `Fix`, `Sounding`, `SatisfactionFinding`, and `CoverageFinding` derive
+  `PartialEq`/`Eq`, comparing their fields structurally by value.
+  `Correction<Body>`, `Course<Body>`, `Bearing<Body>`, and `Residual<Body>`
+  derive `PartialEq`/`Eq` conditionally on `Body`, so a consumer whose payload
+  supports equality can compare these values directly (for example,
+  `assert_eq!` in a consumer's own tests).
+- `suunta-governance`'s active-prose presence check now also covers the three
+  crate-level READMEs (`crates/suunta/README.md`,
+  `crates/suunta-contract/README.md`, `crates/suunta-governance/README.md`), so
+  a missing or unreadable crate readme fails the gate the same way a missing
+  root doc already does.
+
+### Changed
+
+- `Correction::new`, `Correction::sigil`, `Correction::reversibility`,
+  `Correction::body`, `Course::new`, `Bearing::new`, `Fix::new`,
+  `Sounding::new`, and `Sounding::fix` are now `const fn`.
+- `crates/suunta-contract/README.md`'s status paragraph now matches
+  `BACKLOG.md`'s settled dispositions (settlement's three layered homes;
+  coverage production and the async edge placed downstream) instead of its
+  0.1.0-era "remain deferred" wording.
+- `AGENTS.md`'s Release Finalization checklist gained a step to sweep
+  crate-level READMEs and other non-governed prose for stale version markers
+  or superseded disposition language at release time.
+
 ## [0.2.0] - 2026-07-30
 
 Defines the finite consumption effects Suunta's residual mechanism owns, separating
@@ -92,6 +125,7 @@ types), the curated `suunta` facade, and executable Tianheng governance.
   `is_converged`), a single-cycle disposition (the domain's), and cross-cycle termination
   (a driver's, deferred). See `BACKLOG.md`.
 
+[0.2.1]: https://github.com/tacticaldoll/suunta/releases/tag/v0.2.1
 [0.2.0]: https://github.com/tacticaldoll/suunta/releases/tag/v0.2.0
 [0.1.1]: https://github.com/tacticaldoll/suunta/releases/tag/v0.1.1
 [0.1.0]: https://github.com/tacticaldoll/suunta/releases/tag/v0.1.0
