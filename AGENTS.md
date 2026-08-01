@@ -211,6 +211,9 @@ explore -> propose -> apply -> sync
 ### Release Finalization
 
 - Prepare release content in a pull request whose squash subject is exactly `chore(release): prepare X.Y.Z`.
+- Sweep crate-level README files and other non-governed prose for stale version markers
+  or disposition language that `BACKLOG.md` has since resolved, superseded, or placed
+  downstream.
 - Give the release preparation squash commit a non-empty body describing scope, compatibility, metadata changes, and verification.
 - Run the complete Definition of Done after that commit reaches `main`.
 - Finalize with annotated tag `vX.Y.Z` on that commit, with message exactly `release: X.Y.Z`.

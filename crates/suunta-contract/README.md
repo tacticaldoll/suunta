@@ -9,11 +9,14 @@ identity (`Sigil`), target satisfaction, relevance, and settlement are all
 domain-supplied. It exposes no `async fn`, reads no ambient clock, and performs no
 I/O; a runtime drives it.
 
-0.1.0 ships the residual planner — `plan_residual` takes a `Bearing` and a per-cycle
+The residual planner is shipped — `plan_residual` takes a `Bearing` and a per-cycle
 `Sounding` (the `Fix` and coverage findings) — alongside the
 `Correction`/`Course`/`Sigil`/`Reversibility` vocabulary and the body-free `Fix`/`Sounding`
-reading types. The settlement predicate, the production-side coverage contract, and an
-async edge remain deferred.
+reading types. Settlement decomposes into three layers: the core exposes only the
+policy-free `Residual::is_converged` (Layer 1); per-target disposition (Layer 2) and
+cross-cycle termination (Layer 3) are the domain's and driver's downstream verbs. The
+coverage-production contract and an async edge are likewise placed downstream, not core
+work awaiting a consumer — see `BACKLOG.md`.
 
 Part of [Suunta](https://github.com/tacticaldoll/suunta).
 
