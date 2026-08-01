@@ -217,12 +217,8 @@ fn four_trajectories_halt_by_disposition() {
         for finding in &residual.surfaced {
             // SurfacedFinding is #[non_exhaustive]; a conflict is held, the rest are the
             // uncertainty alarms already reflected by the retained targets above.
-            match finding {
-                SurfacedFinding::Conflicting(idx) => {
-                    dispositions.push((format!("in-flight#{}", idx.0), Disposition::Held));
-                }
-                SurfacedFinding::UnknownRetained(_) | SurfacedFinding::Superseded(_) => {}
-                _ => {}
+            if let SurfacedFinding::Conflicting(idx) = finding {
+                dispositions.push((format!("in-flight#{}", idx.0), Disposition::Held));
             }
         }
         break;

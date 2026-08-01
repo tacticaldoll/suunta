@@ -91,7 +91,7 @@ pub struct Correction<Body> {
 impl<Body> Correction<Body> {
     /// Plan a correction from its domain identity, reversibility, and payload.
     #[must_use]
-    pub fn new(sigil: Sigil, reversibility: Reversibility, body: Body) -> Self {
+    pub const fn new(sigil: Sigil, reversibility: Reversibility, body: Body) -> Self {
         Self {
             sigil,
             reversibility,
@@ -101,19 +101,19 @@ impl<Body> Correction<Body> {
 
     /// The correction's domain-supplied semantic identity, compared by value.
     #[must_use]
-    pub fn sigil(&self) -> &Sigil {
+    pub const fn sigil(&self) -> &Sigil {
         &self.sigil
     }
 
     /// Whether the correction can be undone.
     #[must_use]
-    pub fn reversibility(&self) -> Reversibility {
+    pub const fn reversibility(&self) -> Reversibility {
         self.reversibility
     }
 
     /// The opaque domain payload. The core carries it but never interprets it.
     #[must_use]
-    pub fn body(&self) -> &Body {
+    pub const fn body(&self) -> &Body {
         &self.body
     }
 }
@@ -133,7 +133,7 @@ pub struct Course<Body> {
 impl<Body> Course<Body> {
     /// Assemble a course from corrections, preserving their order.
     #[must_use]
-    pub fn new(corrections: Vec<Correction<Body>>) -> Self {
+    pub const fn new(corrections: Vec<Correction<Body>>) -> Self {
         Self { corrections }
     }
 
@@ -159,7 +159,7 @@ pub struct Bearing<Body> {
 impl<Body> Bearing<Body> {
     /// A bearing over the domain's desired `Correction`s, in the order supplied.
     #[must_use]
-    pub fn new(targets: Vec<Correction<Body>>) -> Self {
+    pub const fn new(targets: Vec<Correction<Body>>) -> Self {
         Self { targets }
     }
 
@@ -226,7 +226,7 @@ pub struct Fix {
 impl Fix {
     /// Assemble a fix from one cycle's per-target satisfaction findings.
     #[must_use]
-    pub fn new(findings: Vec<SatisfactionFinding>) -> Self {
+    pub const fn new(findings: Vec<SatisfactionFinding>) -> Self {
         Self { findings }
     }
 
@@ -299,13 +299,13 @@ pub struct Sounding {
 impl Sounding {
     /// Assemble one cycle's readings from its `Fix` and its coverage findings.
     #[must_use]
-    pub fn new(fix: Fix, coverage: Vec<CoverageFinding>) -> Self {
+    pub const fn new(fix: Fix, coverage: Vec<CoverageFinding>) -> Self {
         Self { fix, coverage }
     }
 
     /// This cycle's certified satisfaction of the `Bearing`'s targets.
     #[must_use]
-    pub fn fix(&self) -> &Fix {
+    pub const fn fix(&self) -> &Fix {
         &self.fix
     }
 
