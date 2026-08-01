@@ -1,7 +1,7 @@
 # convergence-contract Specification
 
 ## Purpose
-Define Suunta's convergence-planning contract: the navigation vocabulary; the residual `Course` that `plan_residual` computes from a `Bearing` and domain-certified satisfaction and coverage findings (omitting only positively-certified targets, surfacing uncertainty); the semantic bill of purity in four faces; stable-`Sigil` identity; opaque `Correction` payloads; One-Way marking; sans-I/O purity; and dependency isolation.
+Define Suunta's convergence-planning contract: the navigation vocabulary; the residual `Course` that `plan_residual` computes from a `Bearing` and domain-certified satisfaction and coverage findings (omitting only positively-certified targets, surfacing uncertainty); the semantic bill of purity in four faces; stable-`Sigil` identity; opaque `Correction` payloads; structural equality on the reading and value types; One-Way marking; sans-I/O purity; and dependency isolation.
 ## Requirements
 ### Requirement: Navigation Vocabulary
 Suunta SHALL name the convergence-planning roles with a fixed navigation register:
@@ -267,6 +267,28 @@ today (the per-target and coverage findings already carry no `Body`).
 #### Scenario: A Sounding bundles the cycle's readings
 - **WHEN** a `Sounding` is constructed for one cycle
 - **THEN** it holds that cycle's `Fix` and its coverage findings, and is fed together with the `Bearing` to `plan_residual`
+
+### Requirement: Value Types Support Structural Equality
+Suunta SHALL derive `PartialEq`/`Eq` for the body-free reading types (`Fix`, `Sounding`, `SatisfactionFinding`, `CoverageFinding`) and SHALL derive `PartialEq`/`Eq` conditionally on `Body` for the `Body`-generic value types (`Correction<Body>`, `Course<Body>`, `Bearing<Body>`, `Residual<Body>`).
+
+Equality on the body-free types compares their fields structurally by value. Equality on the `Body`-generic types is conditional — `PartialEq` requires `Body: PartialEq` and `Eq` requires `Body: Eq` — so a consumer whose payload supports equality can compare these values directly. The core SHALL NOT impose any unconditional trait bound on `Body` as a result, and SHALL NOT author a comparison of the payload's meaning: the derived equality is a structural, compiler-generated field comparison, the same class as the `Sigil` value comparison the core already performs.
+
+#### Scenario: Body-free reading types compare structurally
+- **WHEN** two `Sounding`, `Fix`, `SatisfactionFinding`, or `CoverageFinding`
+  values are compared
+- **THEN** they are equal exactly when their fields are equal by value
+
+#### Scenario: Body-carrying types compare only when Body does
+- **WHEN** a consumer's `Body` implements `PartialEq`
+- **THEN** `Correction<Body>`, `Course<Body>`, `Bearing<Body>`, and
+  `Residual<Body>` values with that `Body` can be compared by value, structurally
+
+#### Scenario: No unconditional bound is added to the core
+- **WHEN** `suunta-contract`'s public API is compiled
+- **THEN** no core-owned function (`Correction::new`, `.sigil()`, `.body()`,
+  `plan_residual`, and so on) requires `Body: PartialEq` or `Body: Eq`; the
+  conditional derive only activates equality for consumers whose own `Body`
+  already supports it
 
 ### Requirement: One-Way Corrections Are Marked
 A `Correction` SHALL declare its reversibility, and a One-Way `Correction` SHALL be
