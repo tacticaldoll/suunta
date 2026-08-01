@@ -36,6 +36,9 @@ const ACTIVE_PROSE_FILES: &[&str] = &[
     "BACKLOG.md",
     "docs/development-flow.md",
     "docs/domain-language.md",
+    "crates/suunta/README.md",
+    "crates/suunta-contract/README.md",
+    "crates/suunta-governance/README.md",
 ];
 
 // No legacy vocabulary exists to guard against at this shape — Suunta is new, with no

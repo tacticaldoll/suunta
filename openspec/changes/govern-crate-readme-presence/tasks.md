@@ -1,9 +1,9 @@
 ## 1. Implementation
 
-- [ ] 1.1 Add `crates/suunta/README.md`, `crates/suunta-contract/README.md`, and
+- [x] 1.1 Add `crates/suunta/README.md`, `crates/suunta-contract/README.md`, and
       `crates/suunta-governance/README.md` to `ACTIVE_PROSE_FILES` in
       `crates/suunta-governance/src/main.rs`.
-- [ ] 1.2 Run the full Definition of Done (`AGENTS.md`) and confirm it passes,
+- [x] 1.2 Run the full Definition of Done (`AGENTS.md`) and confirm it passes,
       including `cargo run -p suunta-governance -- check --manifest-path Cargo.toml`.
 
 ## 2. Sync
