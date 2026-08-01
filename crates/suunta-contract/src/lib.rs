@@ -81,7 +81,7 @@ pub enum Reversibility {
 ///
 /// Construct via [`Correction::new`]; read via [`Correction::sigil`],
 /// [`Correction::reversibility`], and [`Correction::body`].
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Correction<Body> {
     sigil: Sigil,
     reversibility: Reversibility,
@@ -125,7 +125,7 @@ impl<Body> Correction<Body> {
 /// collapsing two of them would require judging that they *mean* the same, which is not
 /// the core's to decide. The computation that *forms* a `Course` as a residual is
 /// performed by [`plan_residual`]; this type is only the carrier.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Course<Body> {
     corrections: Vec<Correction<Body>>,
 }
@@ -151,7 +151,7 @@ impl<Body> Course<Body> {
 /// A `Bearing` is *what should be*. The residual is what remains of it once satisfied and
 /// covered targets are removed. A `Bearing` target is a desired `Correction`, carried
 /// opaquely; a `Bearing` is a desired target, never an observation of reality.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Bearing<Body> {
     targets: Vec<Correction<Body>>,
 }
@@ -202,7 +202,7 @@ pub enum Satisfaction {
 /// This is the `Fix` reaching the core — a domain-certified effect per target, never a
 /// raw observation. Satisfaction is judged and normalized upstream; the core only applies
 /// its mechanical contribution.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SatisfactionFinding {
     /// The `Bearing` target this verdict is about, by its `Sigil`.
     pub target: Sigil,
@@ -218,7 +218,7 @@ pub struct SatisfactionFinding {
 /// it and never computes it. A `Fix` is **body-free** — it references targets only by
 /// [`Sigil`] and carries no domain payload. Construct via [`Fix::new`]; read via
 /// [`Fix::findings`].
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Fix {
     findings: Vec<SatisfactionFinding>,
 }
@@ -273,7 +273,7 @@ pub enum CoverageEffect {
 /// This is the *relevant in-flight* reaching the core — a domain-certified effect, never
 /// a raw in-flight `Correction`. Production and richer relation taxonomies remain
 /// downstream; the core never inspects the in-flight corrections themselves.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CoverageFinding {
     /// The in-flight instance this verdict is about.
     pub inflight: InFlightIndex,
@@ -290,7 +290,7 @@ pub struct CoverageFinding {
 /// taken *against*, so it is not part of the `Sounding`; the domain payload flows only
 /// from `Bearing<Body>` into [`Course<Body>`](Course). Construct via [`Sounding::new`];
 /// read via [`Sounding::fix`] and [`Sounding::coverage`].
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Sounding {
     fix: Fix,
     coverage: Vec<CoverageFinding>,
@@ -334,7 +334,7 @@ pub enum SurfacedFinding {
 }
 
 /// The output of [`plan_residual`]: the residual `Course` plus the surfaced findings.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Residual<Body> {
     /// The residual plan: `Bearing` targets neither satisfied nor covered.
     pub course: Course<Body>,
@@ -509,6 +509,49 @@ mod tests {
             Correction::new(Sigil::new("same"), Reversibility::OneWay, 2u8),
         ]);
         assert_eq!(course.corrections().len(), 2);
+    }
+
+    #[test]
+    fn body_free_reading_types_compare_structurally() {
+        let a = Sounding::new(
+            Fix::new(vec![sat("a", Satisfaction::Satisfied)]),
+            vec![CoverageFinding {
+                inflight: InFlightIndex(0),
+                effect: CoverageEffect::Covers(Sigil::new("b")),
+            }],
+        );
+        let same = Sounding::new(
+            Fix::new(vec![sat("a", Satisfaction::Satisfied)]),
+            vec![CoverageFinding {
+                inflight: InFlightIndex(0),
+                effect: CoverageEffect::Covers(Sigil::new("b")),
+            }],
+        );
+        let different = Sounding::new(Fix::new(vec![sat("a", Satisfaction::Unsatisfied)]), vec![]);
+
+        assert_eq!(a, same, "equal fields make equal Soundings");
+        assert_ne!(a, different, "a differing Fix makes an unequal Sounding");
+    }
+
+    #[test]
+    fn body_carrying_types_compare_structurally_when_body_does() {
+        let a = Course::new(vec![corr("x", 1u8)]);
+        let same = Course::new(vec![corr("x", 1u8)]);
+        let different_body = Course::new(vec![corr("x", 2u8)]);
+        let different_sigil = Course::new(vec![corr("y", 1u8)]);
+
+        assert_eq!(
+            a, same,
+            "equal Sigil, Reversibility, and Body make equal Corrections"
+        );
+        assert_ne!(
+            a, different_body,
+            "a differing Body makes an unequal Course"
+        );
+        assert_ne!(
+            a, different_sigil,
+            "a differing Sigil makes an unequal Course"
+        );
     }
 
     // --- residual planner (the test helpers below are the non-shipped fixture consumer:
