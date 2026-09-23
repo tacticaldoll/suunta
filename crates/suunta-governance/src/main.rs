@@ -15,11 +15,11 @@ use std::{
 
 use tianheng::prelude::*;
 
-const CONTRACT_REASON: &str = "suunta-contract is the isolated planning core. At this shape it depends on nothing, and must never depend on another workspace crate or a runtime framework: its residual computation is pure.";
-const GOVERNANCE_REASON: &str = "the governance gate must stay independent of the workspace graph it judges: it may depend only on Tianheng's composed adopter surface, never on an individual governance instrument or a workspace crate under judgment.";
-const CORE_PURITY_REASON: &str = "suunta-contract is the sans-I/O planning core: it reads no ambient clock and exposes no async function; time and asynchronous driving live at the runtime edge.";
+const CONTRACT_REASON: &str = "suunta-contract is the isolated planning core. At this shape it has no normal dependencies, and must never take one on another workspace crate or a runtime framework: its residual computation is pure.";
+const GOVERNANCE_REASON: &str = "the governance gate must stay independent of the workspace graph it judges: its normal dependencies are Tianheng's composed adopter surface alone, never an individual governance instrument or a workspace crate under judgment.";
+const CORE_PURITY_REASON: &str = "suunta-contract is the sans-I/O planning core: it makes no inline `std::time` `now` call and exposes no public `async fn`; time and asynchronous driving live at the runtime edge. Coverage is partial by nature (a clock read through a method on a value, such as `Instant::elapsed`, is invisible to a source scan, as is a public function written to return `impl Future`), so this tooth complements review rather than replacing it.";
 const CORE_NO_IO_REASON: &str = "the sans-I/O planning core performs no I/O: no code in suunta-contract may call into std::io/fs/net/process; I/O lives in a runtime outside the core. Coverage is partial by nature (I/O entry points cannot be enumerated, and macro-expanded I/O such as println! is invisible to a source scan), so this tooth complements review rather than replacing it.";
-const FACADE_REASON: &str = "suunta is the curated published entrypoint. It may depend only on suunta-contract, never on a backend, runtime, or external framework.";
+const FACADE_REASON: &str = "suunta is the curated published entrypoint. Its normal dependencies are suunta-contract alone, never a backend, runtime, or external framework.";
 const FACADE_REEXPORT_REASON: &str =
     "the suunta facade must stay a pure re-export entrypoint and hold no logic of its own";
 const FACADE_NON_REEXPORT: &str = "non-re-export item in facade library";
