@@ -31,7 +31,7 @@ Regenerate it with `BLESS=1 cargo test -p suunta-governance law_projection_is_fr
 
 ### `suunta-contract::crate` (module)
 
-> suunta-contract is the sans-I/O planning core: it makes no inline `std::time` `now` call and exposes no public `async fn`; time and asynchronous driving live at the runtime edge. Coverage is partial by nature (a clock read through a method on a value, such as `Instant::elapsed`, is invisible to a source scan, as is a public function written to return `impl Future`), so this tooth complements review rather than replacing it.
+> suunta-contract is the sans-I/O planning core: it makes no inline `std::time` `now` call and exposes no public `async fn`; time and asynchronous driving live at the runtime edge. Coverage is partial by nature (a clock read through a method on a value, such as `Instant::elapsed`, is invisible to a source scan, and a public function written to return `impl Future` is not an async fn), so this tooth complements review rather than replacing it.
 
 - **rule**: inline symbol path confined to module (confined_prefix: std::time; ending_with: now)
 - **kind**: module · **severity**: enforce · **crate**: suunta-contract
@@ -68,7 +68,7 @@ Regenerate it with `BLESS=1 cargo test -p suunta-governance law_projection_is_fr
 
 ### `suunta-contract::crate` (semantic)
 
-> suunta-contract is the sans-I/O planning core: it makes no inline `std::time` `now` call and exposes no public `async fn`; time and asynchronous driving live at the runtime edge. Coverage is partial by nature (a clock read through a method on a value, such as `Instant::elapsed`, is invisible to a source scan, as is a public function written to return `impl Future`), so this tooth complements review rather than replacing it.
+> suunta-contract is the sans-I/O planning core: it makes no inline `std::time` `now` call and exposes no public `async fn`; time and asynchronous driving live at the runtime edge. Coverage is partial by nature (a clock read through a method on a value, such as `Instant::elapsed`, is invisible to a source scan, and a public function written to return `impl Future` is not an async fn), so this tooth complements review rather than replacing it.
 
 - **rule**: must not expose async fn (including_submodules: true; scan_depth: subtree)
 - **kind**: semantic · **severity**: enforce · **crate**: suunta-contract
