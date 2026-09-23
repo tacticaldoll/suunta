@@ -1,9 +1,13 @@
 //! Executable architectural governance for the suunta workspace.
 //!
-//! It enforces dependency boundaries, the core's sans-I/O purity (no I/O, no ambient
-//! clock, no exposed `async fn`), workspace coverage, and active-prose presence. The
-//! axiom that the core makes no semantic judgment has no syntactic marker: it is not
-//! statically expressible and stays review-governed, not a tooth here.
+//! It enforces normal-dependency boundaries, the source-observable part of the core's
+//! sans-I/O purity (no inline `std::io`/`fs`/`net`/`process` call, no inline
+//! `std::time` `now` call, no public `async fn`), workspace coverage, and active-prose
+//! presence. The rest of that purity (macro-expanded I/O, a clock read through a method
+//! on a value, a function written to return `impl Future`) is invisible to a source
+//! scan and stays review-governed. The axiom that the core makes no semantic judgment
+//! has no syntactic marker: it is not statically expressible and stays review-governed,
+//! not a tooth here.
 
 #![forbid(unsafe_code)]
 
