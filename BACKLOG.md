@@ -230,8 +230,9 @@ Inherited discipline first, then this project's own resolved design decisions.
   single source of truth for current state. The starter's `docs/adr/` was removed on
   birth.
 - **No OpenSpec change archive.** Sync promotes delta specs into `openspec/specs/`
-  and removes the change directory; git retains the deliberation. `openspec archive`
-  recreates `openspec/changes/archive/` — remove it after each sync.
+  and removes the change directory; git retains the deliberation. `openspec archive` is
+  never run; the `openspec/changes/archive/.gitkeep` scaffold stays and nothing is archived
+  into it.
 - **Definition of Done is single-sourced in `AGENTS.md`.** `README.md` and
   `docs/development-flow.md` point to it rather than restating a divergent subset.
 - **State model — resolved: functional per cycle.** `plan_residual(bearing, &sounding)`
@@ -314,8 +315,8 @@ most an example, and it lives downstream.
   (`plan_residual(&Bearing, &Sounding) -> Residual`); a "real driver" is a downstream
   artifact, not core work.
 - **The async edge.** A pure function has nothing to make `async`; what is async is the
-  downstream driver at the edge. (Unlike pacta, whose async variant is meaningful
-  because it is an `async` trait with persistence I/O.)
+  downstream driver at the edge. (A trait-shaped core with persistence I/O would have a
+  meaningful async variant; Suunta's pure function does not.)
 - **The coverage-*production* contract.** How the domain computes, keys, indexes,
   batches, or caches findings, and any user-implemented judgment trait — the domain's
   *verb*. Suunta's pattern is complete with the shipped consumption envelope, so
