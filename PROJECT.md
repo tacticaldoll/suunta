@@ -94,9 +94,11 @@ The behavior that must be protected first:
   idempotency defenses left to downstream consumers (see `BACKLOG.md`).
 - **Sans-I/O purity**: the core exposes no `async fn`, reads no ambient clock, and
   performs no I/O. A runtime drives it and injects time at the edge.
-- **Governance with teeth**: Tianheng and project specs enforce the boundaries prose
-  claims — with the honest exception that "the core makes no semantic judgment" is
-  not statically expressible and stays review- and structure-governed (see BACKLOG).
+- **Governance with teeth**: Tianheng and project checks enforce the structural
+  shadow of the boundaries prose claims; what a source scan cannot observe (for
+  example macro-expanded I/O or a clock read through a method on a value) stays
+  review-governed. "The core makes no semantic judgment" is not statically
+  expressible at all and stays review- and structure-governed (see BACKLOG).
 
 ## Elegance
 
