@@ -449,13 +449,13 @@ tianheng = { path = "../tianheng" }
             "tianheng",
         ]);
 
-        assert_eq!(
-            check(
-                constitution().static_boundaries(),
-                &allowed.path.join("Cargo.toml"),
-            ),
-            Outcome::Clean,
-            "the adjacent tianheng-only dependency must remain allowed"
+        let outcome = check(
+            constitution().static_boundaries(),
+            &allowed.path.join("Cargo.toml"),
+        );
+        assert!(
+            matches!(outcome, Outcome::Clean(_)),
+            "the adjacent tianheng-only dependency must remain allowed: {outcome:?}"
         );
     }
 
@@ -753,10 +753,9 @@ pub use suunta_contract::{
         let outcome =
             semantic_reaction_outcome("suunta-governance-semantic-clean", "pub fn plan() {}\n");
 
-        assert_eq!(
-            outcome,
-            Outcome::Clean,
-            "a core with no async exposure must raise no semantic violation"
+        assert!(
+            matches!(outcome, Outcome::Clean(_)),
+            "a core with no async exposure must raise no semantic violation: {outcome:?}"
         );
     }
 
