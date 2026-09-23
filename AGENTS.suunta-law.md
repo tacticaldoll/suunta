@@ -10,28 +10,28 @@ Regenerate it with `BLESS=1 cargo test -p suunta-governance law_projection_is_fr
 
 ### `suunta-contract` (crate)
 
-> suunta-contract is the isolated planning core. At this shape it depends on nothing, and must never depend on another workspace crate or a runtime framework: its residual computation is pure.
+> suunta-contract is the isolated planning core. At this shape it has no normal dependencies, and must never take one on another workspace crate or a runtime framework: its residual computation is pure.
 
 - **rule**: restrict dependencies to (only: )
 - **kind**: crate · **severity**: enforce
 
 ### `suunta-governance` (crate)
 
-> the governance gate must stay independent of the workspace graph it judges: it may depend only on Tianheng's composed adopter surface, never on an individual governance instrument or a workspace crate under judgment.
+> the governance gate must stay independent of the workspace graph it judges: its normal dependencies are Tianheng's composed adopter surface alone, never an individual governance instrument or a workspace crate under judgment.
 
 - **rule**: restrict dependencies to (only: tianheng)
 - **kind**: crate · **severity**: enforce
 
 ### `suunta` (crate)
 
-> suunta is the curated published entrypoint. It may depend only on suunta-contract, never on a backend, runtime, or external framework.
+> suunta is the curated published entrypoint. Its normal dependencies are suunta-contract alone, never a backend, runtime, or external framework.
 
 - **rule**: restrict dependencies to (only: suunta-contract)
 - **kind**: crate · **severity**: enforce
 
 ### `suunta-contract::crate` (module)
 
-> suunta-contract is the sans-I/O planning core: it reads no ambient clock and exposes no async function; time and asynchronous driving live at the runtime edge.
+> suunta-contract is the sans-I/O planning core: it makes no inline `std::time` `now` call and exposes no public `async fn`; time and asynchronous driving live at the runtime edge. Coverage is partial by nature (a clock read through a method on a value, such as `Instant::elapsed`, is invisible to a source scan, as is a public function written to return `impl Future`), so this tooth complements review rather than replacing it.
 
 - **rule**: inline symbol path confined to module (confined_prefix: std::time; ending_with: now)
 - **kind**: module · **severity**: enforce · **crate**: suunta-contract
@@ -68,7 +68,7 @@ Regenerate it with `BLESS=1 cargo test -p suunta-governance law_projection_is_fr
 
 ### `suunta-contract::crate` (semantic)
 
-> suunta-contract is the sans-I/O planning core: it reads no ambient clock and exposes no async function; time and asynchronous driving live at the runtime edge.
+> suunta-contract is the sans-I/O planning core: it makes no inline `std::time` `now` call and exposes no public `async fn`; time and asynchronous driving live at the runtime edge. Coverage is partial by nature (a clock read through a method on a value, such as `Instant::elapsed`, is invisible to a source scan, as is a public function written to return `impl Future`), so this tooth complements review rather than replacing it.
 
 - **rule**: must not expose async fn (including_submodules: true; scan_depth: subtree)
 - **kind**: semantic · **severity**: enforce · **crate**: suunta-contract
