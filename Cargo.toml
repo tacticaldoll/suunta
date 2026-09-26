@@ -15,4 +15,4 @@ repository = "https://github.com/tacticaldoll/suunta"
 
 [workspace.dependencies]
 suunta-contract = { path = "crates/suunta-contract", version = "0.2.1" }
-tianheng = "0.6.1"
+tianheng = "0.7.0"
